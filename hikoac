@@ -15,8 +15,18 @@ local Window = Library:CreateWindow({
     MobileButtonsSide = "Left",
     NotifySide = "Right",
     Center = true,
-    Size = UDim2.fromOffset(450, 300),
+    Size = UDim2.fromOffset(650, 500),
     ShowCustomCursor = false,
+})
+
+-- Check if the user is on mobile
+if Library.IsMobile then
+    Size = UDim2.fromOffset(550, 400),
+end
+
+-- Mobile button positioning
+Window = Library:CreateWindow({
+    MobileButtonsSide = "Left"
 })
 
 -- Tabs
