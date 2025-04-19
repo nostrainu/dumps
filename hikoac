@@ -9,18 +9,28 @@ local Toggles = Library.Toggles
 Library.ForceCheckbox = false
 Library.ShowToggleFrameInKeybinds = true
 
-local Window = Library:CreateWindow({
-    Title = "AC",
-    Footer = "Hiko's Chairs",
-    MobileButtonsSide = "Left",
-    NotifySide = "Right",
-    Center = true,
-    Size = UDim2.fromOffset(650, 500),
-    ShowCustomCursor = false,
-})
+local Window
 
 if Library.IsMobile then
-    Size = UDim2.fromOffset(450, 300),
+    Window = Library:CreateWindow({
+        Title = "AC",
+        Footer = "Hiko's Chairs",
+        MobileButtonsSide = "Left",
+        NotifySide = "Right",
+        Center = true,
+        Size = UDim2.fromOffset(450, 300), 
+        ShowCustomCursor = false,
+    })
+else
+    Window = Library:CreateWindow({
+        Title = "AC",
+        Footer = "Hiko's Chairs",
+        MobileButtonsSide = "Left",
+        NotifySide = "Right",
+        Center = true,
+        Size = UDim2.fromOffset(650, 500), 
+        ShowCustomCursor = false,
+    })
 end
 
 -- Tabs
