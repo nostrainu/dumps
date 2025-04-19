@@ -1,0 +1,168 @@
+local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
+local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
+local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
+local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
+
+local Options = Library.Options
+local Toggles = Library.Toggles
+
+Library.ForceCheckbox = false
+Library.ShowToggleFrameInKeybinds = true
+
+local Window = Library:CreateWindow({
+    Title = "AC",
+    Footer = "Hiko's Chairs",
+    MobileButtonsSide = "Left",
+    NotifySide = "Right",
+    Center = true,
+    Size = UDim2.fromOffset(450, 300),
+    ShowCustomCursor = false,
+})
+
+-- Tabs
+local Tabs = {
+    Main = Window:AddTab("Main", "user"),
+    ["UI Settings"] = Window:AddTab("UI Settings", "settings"),
+}
+
+-- Auto Farm
+getgenv().teleport_enabled = false  
+getgenv().teleport_delay = 1  
+
+local players = game:GetService("Players")
+local replicated_storage = game:GetService("ReplicatedStorage")
+local player = players.LocalPlayer
+local data_remote_event = replicated_storage.BridgeNet2.dataRemoteEvent
+
+-- Add a toggle to enable/disable teleportation
+
+local LeftGroupBox = Tabs.Main:AddLeftGroupbox("Auto Farm")
+
+LeftGroupBox:AddToggle("TeleportToggle", {
+    Text = "Enable Teleport",
+    Default = false,
+    Callback = function(Value)
+        getgenv().teleport_enabled = Value
+    end
+})
+
+-- Add a slider for teleport delay
+LeftGroupBox:AddSlider("TeleportDelay", {
+    Text = "Teleport Delay",
+    Default = 1,
+    Min = 0.1,
+    Max = 5,
+    Rounding = 1,
+    Compact = false,
+    Callback = function(Value)
+        getgenv().teleport_delay = Value
+    end
+})
+
+-- Functions to control teleportation
+function float()
+    local character = player.Character
+    local root_part = character and character:FindFirstChild("HumanoidRootPart")
+    if not root_part then return end
+    root_part.Velocity = Vector3.zero
+end
+
+function get_distance(position)
+    return player.Character and player:DistanceFromCharacter(position) or math.huge
+end
+
+function teleport(position)
+    local character = player.Character
+    if not character then return end
+    character:SetAttribute("InTp", true)
+    character:PivotTo(position)
+end
+
+function get_nearest_mob()
+    local dist = math.huge
+    local target = nil
+
+    for i, v in workspace.__Main.__Enemies.Server:GetDescendants() do
+        local scale = v:GetAttribute("Scale")
+        if v:IsA("Part") and not v:GetAttribute("Dead") and scale == 2 then
+            local mag = get_distance(v:GetPivot().p)
+            if mag and mag < dist then
+                dist = mag
+                target = v
+            end
+        end
+    end
+    return target
+end
+
+-- Teleporting & Attack Loop
+task.spawn(function()
+    while task.wait() do
+        if not teleport_enabled then continue end
+
+        local mob = get_nearest_mob()
+        if mob then
+            local scale = mob:GetAttribute("Scale")
+            if scale == 2 then
+                float()
+                teleport(mob:GetPivot() * CFrame.new(0, 2, 0.1))
+            end
+        end
+        task.wait(teleport_delay)  -- Use teleport delay here
+    end
+end)
+
+task.spawn(function()
+    while task.wait() do
+        if not teleport_enabled then continue end
+
+        local mob = get_nearest_mob()
+        if mob then
+            data_remote_event:FireServer({{Event = "PunchAttack", Enemy = mob.Name}, "\4"})
+        end
+    end
+end)
+
+
+-- Menu Group
+local MenuGroup = Tabs["UI Settings"]:AddLeftGroupbox("Menu")
+
+MenuGroup:AddDropdown("NotificationSide", {
+    Values = { "Left", "Right" },
+    Default = "Right",
+    Text = "Notification Side",
+    Callback = function(Value)
+        Library:SetNotifySide(Value)
+    end,
+})
+
+MenuGroup:AddDropdown("DPIDropdown", {
+    Values = { "50%", "75%", "100%", "125%", "150%", "175%", "200%" },
+    Default = "100%",
+    Text = "DPI Scale",
+    Callback = function(Value)
+        Value = Value:gsub("%%", "")
+        local DPI = tonumber(Value)
+        Library:SetDPIScale(DPI)
+    end,
+})
+
+MenuGroup:AddDivider()
+MenuGroup:AddLabel("Menu bind")
+    :AddKeyPicker("MenuKeybind", { Default = "LeftControl", NoUI = true, Text = "Menu keybind" })
+
+MenuGroup:AddButton("Unload", function()
+	Library:Unload()
+end)
+	
+Library.ToggleKeybind = Options.MenuKeybind
+ThemeManager:SetLibrary(Library)
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({ "MenuKeybind" })
+ThemeManager:SetFolder("MyScriptHub")
+SaveManager:SetFolder("MyScriptHub/specific-game")
+SaveManager:SetSubFolder("specific-place")
+SaveManager:BuildConfigSection(Tabs["UI Settings"])
+ThemeManager:ApplyToTab(Tabs["UI Settings"])
+SaveManager:LoadAutoloadConfig()
