@@ -19,11 +19,6 @@ local Window = Library:CreateWindow({
     ShowCustomCursor = false,
 })
 
--- Mobile button positioning
-Window = Library:CreateWindow({
-    MobileButtonsSide = "Left"
-})
-
 -- Tabs
 local Tabs = {
     Main = Window:AddTab("Main", "user"),
