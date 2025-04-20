@@ -195,7 +195,9 @@ LeftGroupBox:AddSlider("TeleportDelay", {
 })
 
 -- Auto Dungeon Tab
-LeftGroupBox:AddToggle("AutoDungeon", {
+local RightGroupBox = Tabs.Main:AddRightGroupbox("Auto Dungeon")
+
+RightGroupBox:AddToggle("AutoDungeon", {
     Text = "Auto Dungeon Farm",
     Default = false,
     Callback = function(Value)
@@ -203,7 +205,7 @@ LeftGroupBox:AddToggle("AutoDungeon", {
     end
 })
 
-LeftGroupBox:AddToggle("AutoReplayDungeon", {
+RightGroupBox:AddToggle("AutoReplayDungeon", {
     Text = "Auto Replay Dungeon",
     Default = false,
     Callback = function(Value)
