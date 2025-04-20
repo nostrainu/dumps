@@ -39,41 +39,17 @@ local Tabs = {
     ["UI Settings"] = Window:AddTab("UI Settings", "settings"),
 }
 
--- Auto Farm
-getgenv().teleport_enabled = false  
-getgenv().teleport_delay = 1  
+-- Locals
 
 local players = game:GetService("Players")
 local replicated_storage = game:GetService("ReplicatedStorage")
 local player = players.LocalPlayer
 local data_remote_event = replicated_storage.BridgeNet2.dataRemoteEvent
 
--- Add a toggle to enable/disable teleportation
+-- Teleport Function
+getgenv().teleport_enabled = false  
+getgenv().teleport_delay = 1  
 
-local LeftGroupBox = Tabs.Main:AddLeftGroupbox("Auto Farm")
-
-LeftGroupBox:AddToggle("TeleportToggle", {
-    Text = "Enable Teleport",
-    Default = false,
-    Callback = function(Value)
-        getgenv().teleport_enabled = Value
-    end
-})
-
--- Add a slider for teleport delay
-LeftGroupBox:AddSlider("TeleportDelay", {
-    Text = "Teleport Delay",
-    Default = 1,
-    Min = 0.1,
-    Max = 5,
-    Rounding = 1,
-    Compact = false,
-    Callback = function(Value)
-        getgenv().teleport_delay = Value
-    end
-})
-
--- Functions to control teleportation
 function float()
     local character = player.Character
     local root_part = character and character:FindFirstChild("HumanoidRootPart")
@@ -109,7 +85,6 @@ function get_nearest_mob()
     return target
 end
 
--- Teleporting & Attack Loop
 task.spawn(function()
     while task.wait() do
         if not teleport_enabled then continue end
@@ -122,7 +97,7 @@ task.spawn(function()
                 teleport(mob:GetPivot() * CFrame.new(0, 2, 0.1))
             end
         end
-        task.wait(teleport_delay)  -- Use teleport delay here
+        task.wait(teleport_delay) 
     end
 end)
 
@@ -132,11 +107,109 @@ task.spawn(function()
 
         local mob = get_nearest_mob()
         if mob then
-            data_remote_event:FireServer({{Event = "PunchAttack", Enemy = mob.Name}, "\4"})
+            data_remote_event:FireServer({{Event = "PunchAttack", Enemy = mob.Name}})
         end
     end
 end)
 
+-- Auto Dungeon Core
+getgenv().auto_dungeon = false
+getgenv().auto_replay_dungeon = false
+
+
+function auto_dungeon()
+    while task.wait() and getgenv().auto_dungeon do
+        local mob = get_nearest_mob()
+        if not mob then continue end
+
+        float()
+
+        if get_distance(mob:GetPivot().p) > 10 then
+            teleport(mob:GetPivot() * CFrame.new(0, 2, 0.1))
+            task.wait(getgenv().teleport_delay)
+        end
+
+        data_remote_event:FireServer({{Event = "PunchAttack", Enemy = mob.Name}})
+    end
+end
+
+-- Dungeon Replay Logic
+function replay_dungeon()
+    local ticket = player.leaderstats.Inventory.Items:FindFirstChild("Ticket")
+    local ticket_amount = ticket and ticket:GetAttribute("Amount")
+    getgenv().old_ticket = getgenv().old_ticket or ticket_amount or 0
+
+    if getgenv().old_ticket ~= ticket_amount or not replicated_storage:GetAttribute("Dungeon") then
+        for i, v in ctrl_char do
+            data_remote_event:FireServer({{Type = "Gems", Event = "DungeonAction", Action = "BuyTicket"}, v})
+            data_remote_event:FireServer({{Event = "DungeonAction", Action = "Create"}, v})
+
+            if config.use_rune and config.selected_rune then
+                data_remote_event:FireServer({{Dungeon = player.UserId, Action = "AddItems", Slot = 1, Event = "DungeonAction", Item = config.selected_rune}, v})
+                task.wait(0.1)
+            end
+
+            data_remote_event:FireServer({{Dungeon = player.UserId, Event = "DungeonAction", Action = "Start"}, v})
+        end
+        task.wait(10)
+    end
+end
+
+task.spawn(function()
+    while task.wait(5) do
+        if getgenv().auto_replay_dungeon then
+            pcall(replay_dungeon)
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait() do
+        if getgenv().auto_dungeon then
+            pcall(auto_dungeon)
+        end
+    end
+end)
+
+-- Auto Farm Tab
+local LeftGroupBox = Tabs.Main:AddLeftGroupbox("Auto Farm")
+
+LeftGroupBox:AddToggle("TeleportToggle", {
+    Text = "Enable Teleport",
+    Default = false,
+    Callback = function(Value)
+        getgenv().teleport_enabled = Value
+    end
+})
+
+LeftGroupBox:AddSlider("TeleportDelay", {
+    Text = "Teleport Delay",
+    Default = 1,
+    Min = 0.1,
+    Max = 5,
+    Rounding = 1,
+    Compact = false,
+    Callback = function(Value)
+        getgenv().teleport_delay = Value
+    end
+})
+
+-- Auto Dungeon Tab
+LeftGroupBox:AddToggle("AutoDungeon", {
+    Text = "Auto Dungeon Farm",
+    Default = false,
+    Callback = function(Value)
+        getgenv().auto_dungeon = Value
+    end
+})
+
+LeftGroupBox:AddToggle("AutoReplayDungeon", {
+    Text = "Auto Replay Dungeon",
+    Default = false,
+    Callback = function(Value)
+        getgenv().auto_replay_dungeon = Value
+    end
+})
 
 -- Menu Group
 local MenuGroup = Tabs["UI Settings"]:AddLeftGroupbox("Menu")
