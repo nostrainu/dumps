@@ -112,64 +112,58 @@ task.spawn(function()
     end
 end)
 
--- Auto Dungeon Core
+-- Auto Dungeon
 getgenv().auto_dungeon = false
-getgenv().auto_replay_dungeon = false
 
+task.spawn(function()
+    while task.wait() do
+        if getgenv().auto_dungeon then
+            pcall(function()
+                auto_dungeon()
+            end)
+        end
+    end
+end)
 
 function auto_dungeon()
-    while task.wait() and getgenv().auto_dungeon do
-        local mob = get_nearest_mob()
-        if not mob then continue end
+    replay_dungeon()
 
-        float()
+    local mob = get_nearest_mob()
+    if not mob then return end
 
-        if get_distance(mob:GetPivot().p) > 10 then
-            teleport(mob:GetPivot() * CFrame.new(0, 2, 0.1))
-            task.wait(getgenv().teleport_delay)
-        end
+    float()
 
-        data_remote_event:FireServer({{Event = "PunchAttack", Enemy = mob.Name}})
+    if get_distance(mob:GetPivot().p) > 10 then
+        teleport(mob:GetPivot() * CFrame.new(0, 2, 0.1))
+        task.wait(config.speed or 0.1)
     end
+
+    data_remote_event:FireServer({{Event = "PunchAttack", Enemy = mob.Name}, "\4"})
 end
 
--- Dungeon Replay Logic
 function replay_dungeon()
     local ticket = player.leaderstats.Inventory.Items:FindFirstChild("Ticket")
     local ticket_amount = ticket and ticket:GetAttribute("Amount")
-    getgenv().old_ticket = getgenv().old_ticket or ticket_amount or 0
+    getgenv().old_ticket = old_ticket or ticket_amount or 0
 
-    if getgenv().old_ticket ~= ticket_amount or not replicated_storage:GetAttribute("Dungeon") then
-        for i, v in ctrl_char do
+    if old_ticket ~= ticket_amount or not replicated_storage:GetAttribute("Dungeon") then
+        for _, v in ctrl_char do
             data_remote_event:FireServer({{Type = "Gems", Event = "DungeonAction", Action = "BuyTicket"}, v})
             data_remote_event:FireServer({{Event = "DungeonAction", Action = "Create"}, v})
 
             if config.use_rune and config.selected_rune then
-                data_remote_event:FireServer({{Dungeon = player.UserId, Action = "AddItems", Slot = 1, Event = "DungeonAction", Item = config.selected_rune}, v})
+                data_remote_event:FireServer({
+                    {Dungeon = player.UserId, Action = "AddItems", Slot = 1, Event = "DungeonAction", Item = config.selected_rune}, v
+                })
                 task.wait(0.1)
             end
 
             data_remote_event:FireServer({{Dungeon = player.UserId, Event = "DungeonAction", Action = "Start"}, v})
         end
+
         task.wait(10)
     end
 end
-
-task.spawn(function()
-    while task.wait(5) do
-        if getgenv().auto_replay_dungeon then
-            pcall(replay_dungeon)
-        end
-    end
-end)
-
-task.spawn(function()
-    while task.wait() do
-        if getgenv().auto_dungeon then
-            pcall(auto_dungeon)
-        end
-    end
-end)
 
 -- Auto Farm Tab
 local LeftGroupBox = Tabs.Main:AddLeftGroupbox("Auto Farm")
@@ -202,14 +196,6 @@ RightGroupBox:AddToggle("AutoDungeon", {
     Default = false,
     Callback = function(Value)
         getgenv().auto_dungeon = Value
-    end
-})
-
-RightGroupBox:AddToggle("AutoReplayDungeon", {
-    Text = "Auto Replay Dungeon",
-    Default = false,
-    Callback = function(Value)
-        getgenv().auto_replay_dungeon = Value
     end
 })
 
