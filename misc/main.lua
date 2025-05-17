@@ -10,7 +10,7 @@ player.Idled:Connect(function()
 end)
 
 local games = {
-    [3840352284] = "volleyball_4.2",
+    [3840352284] = "volleyball_42",
 }
 
 local name = rawget(games, game.GameId) 
