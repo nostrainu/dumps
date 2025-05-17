@@ -1,5 +1,6 @@
 if not game:IsLoaded() then game.Loaded:Wait() end
 local player = game.Players.LocalPlayer
+local virtual_user = game:GetService("VirtualUser")
 
 player.DevCameraOcclusionMode = "Invisicam"
 
