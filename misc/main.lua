@@ -12,7 +12,7 @@ local games = {
     [3840352284] = "volleyball_4.2",
 }
 
-local name = rawget(list, game.GameId) 
+local name = rawget(games, game.GameId) 
 local file = ("games/%*/script.lua"):format(name):gsub(" ", "%%20")
 if not name then return end
 
