@@ -15,7 +15,7 @@ player.Idled:Connect(function()
     virtual_user:ClickButton2(Vector2.new())
 end)
 
-local list = {
+local games = {
     [3840352284] = "volleyball_4.2",
 }
 
