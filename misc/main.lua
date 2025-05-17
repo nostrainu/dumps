@@ -15,9 +15,4 @@ local name = rawget(list, game.GameId)
 local file = ("list/%*/script.lua"):format(name):gsub(" ", "%%20")
 if not name then return end
 
-getgenv().load_file = function(name, file)
-    local file = ("list/%*/func/%*"):format(name, file):gsub(" ", "%%20")
-    return get_github_file(file)
-end
-
 get_github_file(file)
