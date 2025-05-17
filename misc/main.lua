@@ -15,5 +15,6 @@ local games = {
 local name = rawget(games, game.GameId) 
 local file = ("games/%*/script.lua"):format(name):gsub(" ", "%%20")
 if not name then return end
+print(file)
 
 get_github_file(file)
