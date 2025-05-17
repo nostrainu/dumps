@@ -1,13 +1,5 @@
 if not game:IsLoaded() then game.Loaded:Wait() end
 
-getgenv().get_github_file = function(file)
-    local user, repo = "nostrainu", "dumps"
-    local file = ("https://raw.githubusercontent.com/%*/%*/refs/heads/main/%*"):format(user, repo, file)
-    return loadstring(game:HttpGet(file))()
-end
-
-get_github_file("global.lua")
-
 player.DevCameraOcclusionMode = "Invisicam"
 
 player.Idled:Connect(function()
