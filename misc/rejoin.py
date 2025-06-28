@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "0.6"   
+__version__ = "0.7"   
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -219,18 +219,114 @@ def main():
 
         # 3 ── Auto‑Execute 
         elif choice == "3":
-            if not (delta := find_delta_autoexec()):
-                print("Delta Autoexecute folder not found."); continue
-            code = input("Loadstring: ").strip()
-            if not code.startswith("loadstring"): continue
-            dst = input("File name (myscript.txt): ").strip() or "myscript.txt"
-            if not dst.endswith(".txt"): dst += ".txt"
-            with tempfile.NamedTemporaryFile("w", delete=False) as tmp:
-                tmp.write(code); tmpf = tmp.name
-            cmd = f'su -c "mv {shlex.quote(tmpf)} {shlex.quote(os.path.join(delta,dst))}"'
-            proc = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-            if proc.returncode: print(proc.stderr.strip())
-            else: print("Saved to Delta Autoexecute.\n")
+            print("Executor:")
+            print("[1] Delta   [2] KRNL   [0] Back")
+            ex = input("> ").strip()
+            if ex == "0":
+                continue
+            if ex not in ("1", "2"):
+                print("Invalid executor.\n")
+                continue
+
+            def find_autoexec(root_name):
+                paths = [
+                    f"/storage/emulated/0/{root_name}/Autoexecute",
+                    f"/sdcard/{root_name}/Autoexecute",
+                    f"/storage/emulated/0/{root_name}/autoexec",
+                    f"/sdcard/{root_name}/autoexec",
+                ]
+                for p in paths:
+                    if os.path.isdir(p):
+                        return p
+
+                for root, dirs, _ in os.walk("/storage"):
+                    if root_name.lower() in [d.lower() for d in dirs]:
+                        cand = os.path.join(root, root_name)
+                        for sub in ("Autoexecute", "autoexec"):
+                            if os.path.isdir(os.path.join(cand, sub)):
+                                return os.path.join(cand, sub)
+                    if root.count(os.sep) > 6:
+                        dirs[:] = []
+                return None
+
+            root_name = "Delta" if ex == "1" else "krnl"
+            auto_path = find_autoexec(root_name)
+            if not auto_path:
+                print(f"{root_name} Autoexec folder not found.\n")
+                continue
+
+            while True:
+                print("Loadstring:")
+                print("[1] Save   [2] Delete   [0] Back")
+                sub = input("> ").strip()
+                if sub == "0":
+                    break
+
+                if sub == "1":
+                    code = input("Loadstring: ").strip()
+                    if not code.startswith("loadstring"):
+                        print("Must start with loadstring\n")
+                        continue
+                    if input("Confirm Y/N: ").lower() != "y":
+                        continue
+
+                    fname = input("File name (without .txt): ").strip()
+                    if not fname:
+                        print("Cancelled.\n"); continue
+                    if not fname.lower().endswith(".txt"):
+                        fname += ".txt"
+                    if input(f"Save as {fname}? Y/N: ").lower() != "y":
+                        continue
+
+                    with tempfile.NamedTemporaryFile("w", delete=False) as tmp:
+                        tmp.write(code); tmpf = tmp.name
+                    dst = os.path.join(auto_path, fname)
+                    cmd = f'su -c "mv {shlex.quote(tmpf)} {shlex.quote(dst)}"'
+                    prc = subprocess.run(cmd, shell=True,
+                                         capture_output=True, text=True)
+                    if prc.returncode:
+                        print(prc.stderr.strip())
+                    else:
+                        print(f"Saved to {root_name}/Autoexec: {fname}\n")
+
+                elif sub == "2":
+                    files = sorted([f for f in os.listdir(auto_path)
+                                    if f.lower().endswith(".txt")])
+                    if not files:
+                        print("No .txt files in Autoexec.\n")
+                        continue
+
+                    print("\nDelete Files:")
+                    for i, f in enumerate(files, 1):
+                        print(f"[{i}] {f}")
+                    print("[0] Delete ALL")
+                    pick = input("> ").strip()
+                    if not pick.isdigit():
+                        print("Invalid input.\n"); continue
+
+                    if pick == "0":
+                        if input("Delete ALL files? Y/N: ").lower() != "y":
+                            continue
+                        targets = files
+                    else:
+                        idx = int(pick) - 1
+                        if idx < 0 or idx >= len(files):
+                            print("Invalid choice.\n"); continue
+                        targets = [files[idx]]
+
+                    err = False
+                    for f in targets:
+                        path = os.path.join(auto_path, f)
+                        cmd = f'su -c "rm -f {shlex.quote(path)}"'
+                        if subprocess.run(cmd, shell=True).returncode != 0:
+                            err = True
+                    if err:
+                        print("Some files could not be deleted.\n")
+                    else:
+                        print("Deletion complete.\n")
+
+                else:
+                    print("Invalid choice.\n")
 
         # 4 ── Discord Webhook
         elif choice == "4":
