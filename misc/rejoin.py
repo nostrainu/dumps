@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "1.5"   
+__version__ = "1.6"   
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -16,7 +16,7 @@ FAST_POLL       = 1                        # seconds between stop‑flag polls
 import subprocess, time, requests, colorsys, threading, sys, itertools
 import urllib.parse, os, tempfile, shlex, json, re, shutil, tempfile as _tmp
 
-# ------------------------ Self‑Updater ------------------------ #
+# ------------------------ SELF-UPDATER ------------------------ #
 def check_self_update():
     try:
         r = requests.get(RAW_URL, timeout=10)
@@ -38,18 +38,18 @@ def check_self_update():
         print(f"[Updater] skipped ({e})")
 check_self_update()
 
-# --------------------------- Globals -------------------------- #
+# --------------------------- GLOBALS -------------------------- #
 place_id   = ""       # Roblox place ID
 priv_code  = None     # VIP / share code
 is_share   = False    # True if new share?code=… format
 webhook    = ""       # Discord webhook URL
 
-# ----------------------- Terminal helpers --------------------- #
+# ----------------------- TERMINAL HELPERS --------------------- #
 sh   = lambda c: subprocess.getoutput(c).strip()
 send = lambda m: requests.post(webhook, json={"content": m}, timeout=10) \
                    if webhook else None
 
-# --------------------------- Banner -------------------------- #
+# --------------------------- Banner --------------------------- #
 def rgb(r,g,b,t): return f"\033[38;2;{r};{g};{b}m{t}\033[0m"
 def banner():
     art = [
@@ -66,7 +66,7 @@ def banner():
     pad = (len(art[0]) - len("Made by Grant")) // 2
     print(" " * pad + rgb(255,255,255,"Made by Grant") + "\n")
 
-# -------------------------- Config helpers -------------------- #
+# ----------------------- cONFIG HELPERS ----------------------- #
 def load_config():
     global place_id, priv_code, is_share, webhook
     try:
@@ -101,27 +101,32 @@ def clear_config():
     place_id = ""; priv_code = None; is_share = False; webhook = ""
     print("[Config cleared]")
 
-# -------------------------- Menu UI --------------------------- #
+# -------------------------- MENU UI --------------------------- #
 def show_menu():
     width = 57
     pad = lambda t: t + " " * (width - len(t))
+    cyan = lambda t: f"\033[96m{t}\033[0m"
+    white = lambda t: f"\033[97m{t}\033[0m"
+    gray = lambda t: f"\033[90m{t}\033[0m"
+
     print("\n".join([
-        "╔" + "═"*width + "╗",
-        "║" + "ROLOBOX REJOIN MENU".center(width) + "║",
-        "╠" + "═"*width + "╣",
-        "║" + pad("  1. Game to Join") + "║",
-        "║" + pad("  2. Start Auto-Join") + "║",
-        "║" + pad("  3. Auto-Execute") + "║",
-        "║" + pad("  4. Discord Webhook") + "║",
-        "║" + pad("  5. Config") + "║",
-        "║" + pad("  6. Check for Updates") + "║",
-        "║" + pad("  0. Exit (or 'stop')") + "║",
-        "║" + " "*width + "║",            
-        "║" + pad("  Note: Hello! ") + "║",
-        "╚" + "═"*width + "╝"
+        cyan("╔" + "═" * width + "╗"),
+        cyan("║") + white("   ROLOBOX REJOIN MENU".center(width - 2)) + cyan("║"),
+        cyan("╠" + "═" * width + "╣"),
+        cyan("║") + pad(white("  [1]") + " Game to Join") + cyan("║"),
+        cyan("║") + pad(white("  [2]") + " Start Auto-Join") + cyan("║"),
+        cyan("║") + pad(white("  [3]") + " Auto-Execute") + cyan("║"),
+        cyan("║") + pad(white("  [4]") + " Discord Webhook") + cyan("║"),
+        cyan("║") + pad(white("  [5]") + " Config") + cyan("║"),
+        cyan("║") + pad(white("  [6]") + " Check for Updates") + cyan("║"),
+        cyan("║") + pad(white("  [0]") + " Exit (or 'stop')") + cyan("║"),
+        cyan("║" + " " * width + "║"),
+        cyan("╠" + "═" * width + "╣"),
+        cyan("║") + gray(pad("  Tip: Use 'stop' anytime to cancel rejoining")) + cyan("║"),
+        cyan("╚" + "═" * width + "╝")
     ]))
 
-# ----------------------- Roblox helpers ----------------------- #
+# ----------------------- ROBLOX HELPERS ----------------------- #
 pkgs   = lambda: [l.replace("package:", "") for l in sh("pm list packages")
                   .splitlines() if "com.roblox." in l]
 running = lambda p: p in sh("dumpsys window | grep mCurrentFocus") \
@@ -148,7 +153,7 @@ def find_delta_autoexec():
         if root.count(os.sep) > 6: dirs[:] = []
     return None
 
-# ----------------------- stop listener ------------------------ #
+# ----------------------- STOP LISTENER ------------------------ #
 def start_listener(flag):
     def _listen():
         for ln in sys.stdin:
@@ -156,7 +161,7 @@ def start_listener(flag):
                 flag["stop"] = True; break
     threading.Thread(target=_listen, daemon=True).start()
 
-# --------------------------- Helpers -------------------------- #
+# --------------------------- HELPERS -------------------------- #
 valid_webhook = lambda url: re.match(
     r"^https://(discord(app)?\.com)/api/webhooks/\d+/.+", url)
 
