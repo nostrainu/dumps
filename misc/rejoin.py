@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "2.2"   
+__version__ = "2.2"
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -13,10 +13,10 @@ CHECK_INTERVAL  = 20                       # seconds between package scans
 FAST_POLL       = 1                        # seconds between stop‑flag polls
 # -------------------------------------------------------------- #
 
-import subprocess, time, requests, colorsys, threading, sys, itertools
+import subprocess, time, requests, colorsys, threading, sys
 import urllib.parse, os, tempfile, shlex, json, re, shutil, tempfile as _tmp
 
-# ------------------------ SELF-UPDATER ------------------------ #
+# ------------------------ SELF‑UPDATER ------------------------ #
 def check_self_update():
     try:
         r = requests.get(RAW_URL, timeout=10)
@@ -61,8 +61,9 @@ def banner():
         "╚═╝  ╚═══╝╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ",
     ]
     for ln in art:
-        print("".join(rgb(*(int(x*255) for x in colorsys.hsv_to_rgb(i/len(ln),1,1)), ch)
-                      for i, ch in enumerate(ln)))
+        print("".join(
+            rgb(*(int(c*255) for c in colorsys.hsv_to_rgb(i/len(ln),1,1)), ch)
+            for i, ch in enumerate(ln)))
     pad = (len(art[0]) - len("Made by Grant")) // 2
     print(" " * pad + rgb(255,255,255,"Made by Grant") + "\n")
 
@@ -131,7 +132,7 @@ def show_menu():
         line("  [4] Discord Webhook"),
         line("  [5] Config"),
         line("  [6] Check for Updates"),
-        line("  [0] Exit"),
+        line("  [0] Exit (or 'stop')"),
         line(""),
         border("╠", "╣"),
         "║" + pad(gray + "  Tip: Type 'stop' anytime to cancel rejoining" + reset) + "║",
@@ -202,11 +203,14 @@ def main():
                 q = urllib.parse.parse_qs(p.query)
                 if "code" in q and "share" in p.path:
                     priv_code = q["code"][0]; is_share = True
-                    if input("Confirm link? (Y/N) ").lower() == "y": break
+                    if input("Confirm link? (Y/N) ").lower() == "y":
+                        break
                 elif "privateServerLinkCode" in q:
                     priv_code = q["privateServerLinkCode"][0]; is_share = False
-                    if input("Confirm link? (Y/N) ").lower() == "y": break
-                else: print("  invalid link")
+                    if input("Confirm link? (Y/N) ").lower() == "y":
+                        break
+                else:
+                    print("  invalid link")
             print("Game info saved in memory.\n")
 
         # 2 ── Start Auto‑Join
@@ -233,7 +237,7 @@ def main():
             send("VM Rejoin Tool **stopped** :stop_sign:")
             print("\nStopped.\n")
 
-        # 3 ── Auto‑Execute 
+        # 3 ── Auto‑Execute
         elif choice == "3":
             print("Executor:")
             print("[1] Delta   [2] KRNL   [0] Back")
@@ -244,29 +248,8 @@ def main():
                 print("Invalid executor.\n")
                 continue
 
-            def find_autoexec(root_name):
-                paths = [
-                    f"/storage/emulated/0/{root_name}/Autoexecute",
-                    f"/sdcard/{root_name}/Autoexecute",
-                    f"/storage/emulated/0/{root_name}/autoexec",
-                    f"/sdcard/{root_name}/autoexec",
-                ]
-                for p in paths:
-                    if os.path.isdir(p):
-                        return p
-
-                for root, dirs, _ in os.walk("/storage"):
-                    if root_name.lower() in [d.lower() for d in dirs]:
-                        cand = os.path.join(root, root_name)
-                        for sub in ("Autoexecute", "autoexec"):
-                            if os.path.isdir(os.path.join(cand, sub)):
-                                return os.path.join(cand, sub)
-                    if root.count(os.sep) > 6:
-                        dirs[:] = []
-                return None
-
             root_name = "Delta" if ex == "1" else "krnl"
-            auto_path = find_autoexec(root_name)
+            auto_path = find_delta_autoexec() if ex == "1" else None
             if not auto_path:
                 print(f"{root_name} Autoexec folder not found.\n")
                 continue
@@ -277,8 +260,7 @@ def main():
                 sub = input("> ").strip()
                 if sub == "0":
                     break
-
-                if sub == "1":
+                elif sub == "1":
                     code = input("Loadstring: ").strip()
                     if not code.startswith("loadstring"):
                         print("Must start with loadstring\n")
@@ -305,7 +287,6 @@ def main():
                     else:
                         print(f"Saved to {root_name}/Autoexec: {fname}\n")
                         break
-
                 elif sub == "2":
                     files = sorted([f for f in os.listdir(auto_path)
                                     if f.lower().endswith(".txt")])
@@ -341,7 +322,6 @@ def main():
                         print("Some files could not be deleted.\n")
                     else:
                         print("Deletion complete.\n")
-
                 else:
                     print("Invalid choice.\n")
 
@@ -359,7 +339,7 @@ def main():
             elif sub == "2":
                 webhook = ""; print("Webhook cleared.\n")
 
-        # 5 ── Config 
+        # 5 ── Config
         elif choice == "5":
             print("[1] Save  [2] Clear  [0] Back")
             sub = input("> ").strip().lower()
@@ -367,7 +347,7 @@ def main():
                 save_config()
             elif sub == "2" and input("Sure? Y/N ").lower() == "y":
                 clear_config()
-        
+
         # 6 ── Check for Updates
         elif choice == "6":
             try:
