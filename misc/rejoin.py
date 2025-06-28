@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "2.3"
+__version__ = "2.4"
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -213,52 +213,68 @@ def main():
                     print("  invalid link")
             print("Game info saved in memory.\n")
 
-        # 2 ── Start Auto‑Join
+        # 2 ── Auto‑Join Menu
         elif choice == "2":
             if not place_id:
                 print("Set Place Id first (option 1).\n")
                 continue
 
-            try:
-                raw = input(
-                    f"Auto‑Join Interval in seconds "
-                    f"[{CHECK_INTERVAL}]: "
-                ).strip()
-                interval = int(raw) if raw else CHECK_INTERVAL
-            except ValueError:
-                print("Invalid number.\n")
-                continue
+            while True:
+                print("\nAuto‑Join:")
+                print("[1] Start  (default interval = "
+                      f"{CHECK_INTERVAL}s)")
+                print("[2] Interval (set custom)")
+                print("[0] Back")
+                sub = input("> ").strip()
 
-            if input(f"Confirm interval = {interval}s? (Y/N): ").lower() != "y":
-                print("Cancelled. Returning to menu…\n")
-                continue
-            if input("Start Auto‑Join now? (Y/N): ").lower() != "y":
-                print("Cancelled. Returning to menu…\n")
-                continue
+                if sub == "0":
+                    break
 
-            stop = {"stop": False}
-            start_listener(stop)
-            send("VM Rejoin Tool **online** :satellite:")
-            launched, last = set(), 0
-            open_game(deep_link(place_id, priv_code, is_share))
+                if sub == "1":
+                    interval = CHECK_INTERVAL
+                    print(f"Starting Auto‑Join every {interval}s…")
 
-            while not stop["stop"]:
-                if time.time() - last >= interval:
-                    for p in pkgs():
-                        if running(p):
-                            launched.add(p)
-                        else:
-                            if p not in launched:
-                                send(f"`{p}` closed — restarting :rocket:")
-                            fstop(p)
-                            time.sleep(2)
-                            open_game(deep_link(place_id, priv_code, is_share))
-                            launched.add(p)
-                    last = time.time()
-                time.sleep(FAST_POLL)
+                elif sub == "2":
+                    try:
+                        raw = input("Interval in seconds: ").strip()
+                        interval = int(raw)
+                        if interval <= 0:
+                            print("Interval must be > 0.\n"); continue
+                    except ValueError:
+                        print("Invalid number.\n"); continue
 
-            send("VM Rejoin Tool **stopped** :stop_sign:")
-            print("\nStopped. Returning to menu…\n")
+                    if input(f"Start Auto‑Join every {interval}s? (Y/N): "
+                             ).lower() != "y":
+                        print("Cancelled. Returning…\n")
+                        continue
+                else:
+                    print("Invalid choice.\n")
+                    continue  
+
+                stop = {"stop": False}
+                start_listener(stop)
+                send("VM Rejoin Tool **online** :satellite:")
+                launched, last = set(), 0
+                open_game(deep_link(place_id, priv_code, is_share))
+
+                while not stop["stop"]:
+                    if time.time() - last >= interval:
+                        for p in pkgs():
+                            if running(p):
+                                launched.add(p)
+                            else:
+                                if p not in launched:
+                                    send(f"`{p}` closed — restarting :rocket:")
+                                fstop(p)
+                                time.sleep(2)
+                                open_game(deep_link(place_id, priv_code, is_share))
+                                launched.add(p)
+                        last = time.time()
+                    time.sleep(FAST_POLL)
+
+                send("VM Rejoin Tool **stopped** :stop_sign:")
+                print("\nStopped. Returning to menu…\n")
+                break  
 
         # 3 ── Auto‑Execute
         elif choice == "3":
