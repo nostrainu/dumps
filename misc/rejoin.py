@@ -1,14 +1,43 @@
-#grant rejoin tool
-#please donate
+#!/usr/bin/env python
+# grant rejoin tool – public beta
+# please donate ❤  (GCash / PayPal)
+
+__version__ = "0.1"   
+
+RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
+           "refs/heads/main/misc/rejoin.py")
 
 # --------------------------- CONFIG --------------------------- #
-CONFIG_FILE     = "rejoin_grant.json"      # auto-saved settings
+CONFIG_FILE     = "rejoin_grant.json"      # auto‑saved settings
 CHECK_INTERVAL  = 20                       # seconds between package scans
-FAST_POLL       = 1                        # seconds between stop-flag polls
+FAST_POLL       = 1                        # seconds between stop‑flag polls
 # -------------------------------------------------------------- #
 
 import subprocess, time, requests, colorsys, threading, sys
-import urllib.parse, os, tempfile, shlex, json, re
+import urllib.parse, os, tempfile, shlex, json, re, shutil, tempfile as _tmp
+
+# ------------------------ Self‑Updater ------------------------ #
+def check_self_update():
+    try:
+        r = requests.get(RAW_URL, timeout=10)
+        r.raise_for_status()
+        remote = r.text
+        m = re.search(r'__version__\s*=\s*["\']([^"\']+)["\']', remote)
+        if not m or m.group(1).strip() == __version__:
+            return
+        print(f"[Updater] New version {m.group(1)} available – updating…")
+        cur = os.path.realpath(__file__)
+        with _tmp.NamedTemporaryFile("w", delete=False,
+                                     dir=os.path.dirname(cur)) as t:
+            t.write(remote)
+            new_path = t.name
+        shutil.move(new_path, cur)
+        print("[Updater] Update complete. Restarting…\n")
+        os.execv(sys.executable, [sys.executable] + sys.argv)
+    except Exception as e:
+        print(f"[Updater] skipped ({e})")
+check_self_update()
+# -------------------------------------------------------------- #
 
 # --------------------------- Globals -------------------------- #
 place_id   = ""       # Roblox place ID
@@ -45,10 +74,10 @@ def load_config():
     try:
         with open(CONFIG_FILE, "r") as f:
             cfg = json.load(f)
-        place_id  = cfg.get("place_id",  "")
-        priv_code = cfg.get("priv_code", None)
+        place_id  = cfg.get("place_id", "")
+        priv_code = cfg.get("priv_code")
         is_share  = cfg.get("is_share", False)
-        webhook   = cfg.get("webhook",  "")
+        webhook   = cfg.get("webhook", "")
         print(f"[Loaded config from {CONFIG_FILE}]")
     except FileNotFoundError:
         pass
@@ -56,24 +85,21 @@ def load_config():
         print(f"[Config load error: {e}]")
 
 def save_config():
-    cfg = {
-        "place_id" : place_id,
-        "priv_code": priv_code,
-        "is_share" : is_share,
-        "webhook"  : webhook
-    }
     try:
         with open(CONFIG_FILE, "w") as f:
-            json.dump(cfg, f, indent=2)
+            json.dump(
+                dict(place_id=place_id, priv_code=priv_code,
+                     is_share=is_share, webhook=webhook), f, indent=2)
         print(f"[Saved to {CONFIG_FILE}]")
     except Exception as e:
         print(f"[Config save error: {e}]")
 
 def clear_config():
     global place_id, priv_code, is_share, webhook
-    if os.path.exists(CONFIG_FILE):
-        try: os.remove(CONFIG_FILE)
-        except: pass
+    try:
+        if os.path.exists(CONFIG_FILE):
+            os.remove(CONFIG_FILE)
+    except: pass
     place_id = ""; priv_code = None; is_share = False; webhook = ""
     print("[Config cleared]")
 
@@ -82,23 +108,23 @@ def show_menu():
     width = 57
     pad = lambda t: t + " " * (width - len(t))
     print("\n".join([
-        "╔" + "═" * width + "╗",
+        "╔" + "═"*width + "╗",
         "║" + "ROLOBOX REJOIN MENU".center(width) + "║",
-        "╠" + "═" * width + "╣",
+        "╠" + "═"*width + "╣",
         "║" + pad("  1. Game to Join") + "║",
         "║" + pad("  2. Start Auto-Join") + "║",
         "║" + pad("  3. Auto-Execute") + "║",
         "║" + pad("  4. Discord Webhook") + "║",
         "║" + pad("  5. Config (save / clear)") + "║",
         "║" + pad("  0. Exit (or type 'stop' anytime)") + "║",
-        "║" + " " * width + "║",  
+        "║" + " "*width + "║",            # blank line
         "║" + pad("  Note: Hello! ") + "║",
-        "╚" + "═" * width + "╝"
+        "╚" + "═"*width + "╝"
     ]))
 
 # ----------------------- Roblox helpers ----------------------- #
-pkgs   = lambda: [l.replace("package:","") for l in sh("pm list packages").splitlines()
-                  if "com.roblox." in l]
+pkgs   = lambda: [l.replace("package:", "") for l in sh("pm list packages")
+                  .splitlines() if "com.roblox." in l]
 running = lambda p: p in sh("dumpsys window | grep mCurrentFocus") \
                  or sh(f"pidof {p}") or p in sh("ps -A")
 fstop   = lambda p: sh(f"am force-stop {p}")
@@ -113,7 +139,8 @@ def deep_link(pid, code=None, is_share=False):
 open_game = lambda url: sh(f'am start -a android.intent.action.VIEW -d "{url}"')
 
 def find_delta_autoexec():
-    for p in ("/storage/emulated/0/Delta/Autoexecute", "/sdcard/Delta/Autoexecute"):
+    for p in ("/storage/emulated/0/Delta/Autoexecute",
+              "/sdcard/Delta/Autoexecute"):
         if os.path.isdir(p): return p
     for root, dirs, _ in os.walk("/storage"):
         if "Delta" in dirs:
@@ -131,8 +158,8 @@ def start_listener(flag):
     threading.Thread(target=_listen, daemon=True).start()
 
 # --------------------------- Helpers -------------------------- #
-def valid_webhook(url):
-    return re.match(r"^https://(discord(app)?\.com)/api/webhooks/\d+/.+", url)
+valid_webhook = lambda url: re.match(
+    r"^https://(discord(app)?\.com)/api/webhooks/\d+/.+", url)
 
 # ---------------------------- MAIN ---------------------------- #
 def main():
@@ -147,38 +174,35 @@ def main():
         # 1 ── Game to Join
         if choice == "1":
             while True:
-                pid = input(f"Place Id [{place_id or 'none'}]: ").strip()
-                if not pid:
-                    pid = place_id  # keep old
+                pid = input(f"Place Id [{place_id or 'none'}]: ").strip() or place_id
                 if pid.isdigit() and input("Confirm (Y/N) ").lower() == "y":
                     place_id = pid; break
                 print("  digits only.")
             while True:
-                link = input("Private-server link (Enter to skip): ").strip()
+                link = input("Private‑server link (Enter to skip): ").strip()
                 if not link:
                     priv_code = None; is_share = False; break
-                parsed = urllib.parse.urlparse(link)
-                q = urllib.parse.parse_qs(parsed.query)
-                if "code" in q and "share" in parsed.path:
+                p = urllib.parse.urlparse(link)
+                q = urllib.parse.parse_qs(p.query)
+                if "code" in q and "share" in p.path:
                     priv_code = q["code"][0]; is_share = True
-                    if input("Confirm link (Y/N) ").lower() == "y": break
+                    if input("Confirm link? (Y/N) ").lower() == "y": break
                 elif "privateServerLinkCode" in q:
                     priv_code = q["privateServerLinkCode"][0]; is_share = False
-                    if input("Confirm link (Y/N) ").lower() == "y": break
+                    if input("Confirm link? (Y/N) ").lower() == "y": break
                 else: print("  invalid link")
             print("Game info saved in memory.\n")
 
-        # 2 ── Start Auto-Join
+        # 2 ── Start Auto‑Join
         elif choice == "2":
             if not place_id:
                 print("Set Place Id first (option 1)."); continue
-            stop_data = {"stop": False}
-            start_listener(stop_data)
+            stop = {"stop": False}; start_listener(stop)
             send("VM Rejoin Tool **online** :satellite:")
-            launched, last_check = set(), 0
+            launched, last = set(), 0
             open_game(deep_link(place_id, priv_code, is_share))
-            while not stop_data["stop"]:
-                if time.time() - last_check >= CHECK_INTERVAL:
+            while not stop["stop"]:
+                if time.time() - last >= CHECK_INTERVAL:
                     for p in pkgs():
                         if running(p):
                             launched.add(p)
@@ -188,12 +212,12 @@ def main():
                             fstop(p); time.sleep(2)
                             open_game(deep_link(place_id, priv_code, is_share))
                             launched.add(p)
-                    last_check = time.time()
+                    last = time.time()
                 time.sleep(FAST_POLL)
             send("VM Rejoin Tool **stopped** :stop_sign:")
             print("\nStopped.\n")
 
-        # 3 ── Auto-Execute 
+        # 3 ── Auto‑Execute (Delta)
         elif choice == "3":
             if not (delta := find_delta_autoexec()):
                 print("Delta Autoexecute folder not found."); continue
@@ -216,23 +240,20 @@ def main():
             if sub == "1":
                 url = input("Paste Discord webhook URL: ").strip()
                 if valid_webhook(url):
-                    webhook = url
-                    print("Webhook set.\n")
-                    send("✅ Webhook updated & working!")
+                    webhook = url; print("Webhook set.\n"); send("✅ Webhook updated!")
                 else:
                     print("Invalid Discord webhook.\n")
             elif sub == "2":
                 webhook = ""; print("Webhook cleared.\n")
 
-        # 5 ── Config 
+        # 5 ── Config (save / clear)
         elif choice == "5":
             print("[S] Save  [C] Clear  [0] Back")
             sub = input("> ").strip().lower()
             if sub == "s":
                 save_config()
-            elif sub == "c":
-                if input("Sure? Y/N ").lower() == "y":
-                    clear_config()
+            elif sub == "c" and input("Sure? Y/N ").lower() == "y":
+                clear_config()
 
         # 0 ── Exit
         elif choice == "0":
