@@ -122,7 +122,7 @@ def show_menu():
         f"║  {white('[4]')} Discord Webhook".ljust(width) + "║",
         f"║  {white('[5]')} Config".ljust(width) + "║",
         f"║  {white('[6]')} Check for Updates".ljust(width) + "║",
-        f"║  {white('[0]')} Exit (or 'stop')".ljust(width) + "║",
+        f"║  {white('[0]')} Exit".ljust(width) + "║",
         "║" + " " * width + "║",
         "╠" + "═" * width + "╣",
         f"║  {gray('Tip: Use \'stop\' anytime to cancel rejoining')}".ljust(width) + "║",
