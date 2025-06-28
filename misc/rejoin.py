@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "0.5"   
+__version__ = "0.6"   
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -258,18 +258,53 @@ def main():
         # 6 ── Check for Updates
         elif choice == "6":
             try:
+                print("[Update] Checking GitHub…")
                 r = requests.get(RAW_URL, timeout=10)
                 r.raise_for_status()
-                cur = os.path.realpath(__file__)
-                with _tmp.NamedTemporaryFile("w", delete=False,
-                dir=os.path.dirname(cur)) as t:
-                    t.write(r.text)
-                    new_path = t.name
-                shutil.move(new_path, cur)
-                print("[Update] Complete! Restarting script…\n")
+                remote_code = r.text
+
+                m = re.search(r'__version__\s*=\s*[\'"]([^\'"]+)[\'"]', remote_code)
+                remote_ver = m.group(1).strip() if m else None
+                if not remote_ver:
+                    print("[Update] Remote file missing __version__; abort.\n")
+                    continue
+
+                if remote_ver == __version__:
+                    print(f"[Update] You’re already on the latest version (v{__version__}).\n")
+                    continue
+
+                print(f"[Update] New version v{remote_ver} found. Downloading…")
+
+                response = requests.get(RAW_URL, stream=True, timeout=10)
+                total = int(response.headers.get('Content-Length', 0))
+                chunk_size = 4096
+                downloaded = 0
+                bar_len = 30
+
+                cur_path = os.path.realpath(__file__)
+                dir_path = os.path.dirname(cur_path)
+
+                with _tmp.NamedTemporaryFile("w", delete=False, dir=dir_path) as tmp:
+                    for chunk in response.iter_content(chunk_size=chunk_size):
+                        text = chunk.decode()
+                        tmp.write(text)
+                        downloaded += len(chunk)
+                        if total:
+                            filled = int(bar_len * downloaded // total)
+                            bar = "█" * filled + "-" * (bar_len - filled)
+                            pct = downloaded / total * 100
+                            sys.stdout.write(f"\r  [{bar}] {pct:5.1f}%")
+                            sys.stdout.flush()
+                    tmp_path = tmp.name
+
+                print("\n[Update] Download complete. Installing…")
+                shutil.move(tmp_path, cur_path)
+                print(f"[Update] Installed v{remote_ver}. Restarting script…\n")
+                time.sleep(1)
                 os.execv(sys.executable, [sys.executable] + sys.argv)
+
             except Exception as e:
-                print(f"[Update error] {e}")
+                print(f"[Update error] {e}\n")
 
         # 0 ── Exit
         elif choice == "0":
