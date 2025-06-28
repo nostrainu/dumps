@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "2.9"
+__version__ = "3.0"
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -233,8 +233,8 @@ def main():
                     print("  invalid link")
             print("Game info saved in memory.\n")
 
-        # ── Auto Join
-        elif choice == "2":
+          # ── Auto Join
+          elif choice == "2":
             if not place_id:
                 print("Set Place Id first (option 1).\n")
                 continue
@@ -259,18 +259,31 @@ def main():
                         print("\nNo running Roblox clones detected. Open them first, then List again.\n")
                         continue
 
-                    print("\nClients:")
+                    print("\n╔═══════════════════════════════════════╗")
+                    print("║              Clients                 ║")
+                    print("╠══════╦════════════════╦══════════════╣")
+                    print("║ No.  ║ Name           ║ Status       ║")
+                    print("╠══════╬════════════════╬══════════════╣")
+
+                    live_pids = {c["pid"] for c in clones}
+
                     for c in clones:
-                        print(f"[{c['idx']}] user {c['uid']:>2} | PID {c['pid']}")
-                    print("[0] Start All")
+                        idx = c["idx"]
+                        name = f"Client {idx}"
+                        status = "Running" if c["pid"] in live_pids else "Not running"
+                        print(f"║ {idx:<4} ║ {name:<14} ║ {status:<12} ║")
+
+                    print("╠══════╬════════════════╬══════════════╣")
+                    print("║ 0    ║ Start All      ║ —            ║")
+                    print("╚══════╩════════════════╩══════════════╝")
 
                     raw = input("Choose Number(s): ").strip()
                     if raw == "0":
-                        selected_clients = [c['idx'] for c in clones]
+                        selected_clients = [c["idx"] for c in clones]
                     else:
                         try:
                             picked = list(map(int, raw.split()))
-                            if not all(any(p == c['idx'] for c in clones) for p in picked):
+                            if not all(any(p == c["idx"] for c in clones) for p in picked):
                                 raise ValueError
                             selected_clients = picked
                             print(f"[Selected Clients: {', '.join(map(str, selected_clients))}]\n")
