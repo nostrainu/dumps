@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "1.6"   
+__version__ = "1.7"   
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -103,28 +103,34 @@ def clear_config():
 
 # -------------------------- MENU UI --------------------------- #
 def show_menu():
-    width = 57
-    pad = lambda t: t + " " * (width - len(t))
+    width = 55
+    pad = lambda t: t + " " * (width - len(strip_ansi(t)))
     cyan = lambda t: f"\033[96m{t}\033[0m"
     white = lambda t: f"\033[97m{t}\033[0m"
     gray = lambda t: f"\033[90m{t}\033[0m"
 
-    print("\n".join([
-        cyan("╔" + "═" * width + "╗"),
-        cyan("║") + white("   ROLOBOX REJOIN MENU".center(width - 2)) + cyan("║"),
-        cyan("╠" + "═" * width + "╣"),
-        cyan("║") + pad(white("  [1]") + " Game to Join") + cyan("║"),
-        cyan("║") + pad(white("  [2]") + " Start Auto-Join") + cyan("║"),
-        cyan("║") + pad(white("  [3]") + " Auto-Execute") + cyan("║"),
-        cyan("║") + pad(white("  [4]") + " Discord Webhook") + cyan("║"),
-        cyan("║") + pad(white("  [5]") + " Config") + cyan("║"),
-        cyan("║") + pad(white("  [6]") + " Check for Updates") + cyan("║"),
-        cyan("║") + pad(white("  [0]") + " Exit (or 'stop')") + cyan("║"),
-        cyan("║" + " " * width + "║"),
-        cyan("╠" + "═" * width + "╣"),
-        cyan("║") + gray(pad("  Tip: Use 'stop' anytime to cancel rejoining")) + cyan("║"),
-        cyan("╚" + "═" * width + "╝")
-    ]))
+    def strip_ansi(text):
+        return re.sub(r'\033\[[0-9;]*m', '', text)
+
+    lines = [
+        "╔" + "═" * width + "╗",
+        "║" + "ROLOBOX REJOIN MENU".center(width) + "║",
+        "╠" + "═" * width + "╣",
+        f"║  {white('[1]')} Game to Join".ljust(width) + "║",
+        f"║  {white('[2]')} Start Auto-Join".ljust(width) + "║",
+        f"║  {white('[3]')} Auto-Execute".ljust(width) + "║",
+        f"║  {white('[4]')} Discord Webhook".ljust(width) + "║",
+        f"║  {white('[5]')} Config".ljust(width) + "║",
+        f"║  {white('[6]')} Check for Updates".ljust(width) + "║",
+        f"║  {white('[0]')} Exit (or 'stop')".ljust(width) + "║",
+        "║" + " " * width + "║",
+        "╠" + "═" * width + "╣",
+        f"║  {gray('Tip: Use \'stop\' anytime to cancel rejoining')}".ljust(width) + "║",
+        "╚" + "═" * width + "╝"
+    ]
+
+    for line in lines:
+        print(cyan(line) if "╔" in line or "╚" in line or "╠" in line or "║" in line else line)
 
 # ----------------------- ROBLOX HELPERS ----------------------- #
 pkgs   = lambda: [l.replace("package:", "") for l in sh("pm list packages")
