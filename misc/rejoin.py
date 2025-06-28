@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "2.8"
+__version__ = "2.9"
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -193,20 +193,25 @@ def main():
             while True:
                 pid = input(f"Place Id [{place_id or 'none'}]: ").strip() or place_id
                 if pid.isdigit() and input("Confirm (Y/N) ").lower() == "y":
-                    place_id = pid; break
+                    place_id = pid
+                    break
                 print("  digits only.")
             while True:
                 link = input("Private‑server link (Enter to skip): ").strip()
                 if not link:
-                    priv_code = None; is_share = False; break
+                    priv_code = None
+                    is_share = False
+                    break
                 p = urllib.parse.urlparse(link)
                 q = urllib.parse.parse_qs(p.query)
                 if "code" in q and "share" in p.path:
-                    priv_code = q["code"][0]; is_share = True
+                    priv_code = q["code"][0]
+                    is_share = True
                     if input("Confirm link? (Y/N) ").lower() == "y":
                         break
                 elif "privateServerLinkCode" in q:
-                    priv_code = q["privateServerLinkCode"][0]; is_share = False
+                    priv_code = q["privateServerLinkCode"][0]
+                    is_share = False
                     if input("Confirm link? (Y/N) ").lower() == "y":
                         break
                 else:
@@ -244,14 +249,13 @@ def main():
                         print("Invalid number.\n")
                         continue
 
-                    if input(f"Start Auto‑Join every {interval}s? (Y/N): "
-                             ).lower() != "y":
+                    if input(f"Start Auto‑Join every {interval}s? (Y/N): ").lower() != "y":
                         print("Cancelled. Returning…\n")
                         continue
                 else:
                     print("Invalid choice.\n")
                     continue
-                           
+
                 for pkg in pkgs():
                     if running(pkg):
                         sh(f"su -c 'am force-stop {pkg}'")
@@ -280,8 +284,7 @@ def main():
 
                 send("VM Rejoin Tool **stopped** :stop_sign:")
                 print("\nStopped. Returning to menu…\n")
-                break
-                       
+
         # 3 ── Auto‑Execute
         elif choice == "3":
             print("Executor:")
