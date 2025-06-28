@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "3.1"
+__version__ = "3.2"
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -264,19 +264,18 @@ def main():
                         print("\nNo running Roblox clones detected. Open them first, then List again.\n")
                         continue
 
-                    print("\n╔═════════════════════════════════════════╗")
-                    print("║              Clients                 ║")
-                    print("╠══════╦════════════════╦══════════════╣")
-                    print("║ No.  ║ Name           ║ Status       ║")
-                    print("╠══════╬════════════════╬══════════════╣")
+                    print("\nClients:")
+                    print(f"{'No.':<5}{'Name':<15}{'Status'}")
+                    print("-" * 35)
+
                     live_pids = {c['pid'] for c in clones}
                     for c in clones:
                         idx = c['idx']
+                        name = f"Client {idx}"
                         status = "Running" if c['pid'] in live_pids else "Not running"
-                        print(f"║ {idx:<4} ║ Client {idx:<9} ║ {status:<12} ║")
-                    print("╠══════╬════════════════╬══════════════╣")
-                    print("║ 0    ║ Start All      ║ —            ║")
-                    print("╚══════╩════════════════╩══════════════╝")
+                        print(f"{idx:<5}{name:<15}{status}")
+
+                    print("0    Start All")
 
                     raw = input("Choose Number(s): ").strip()
                     if raw == "0":
