@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "0.3"   
+__version__ = "0.4"   
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -116,7 +116,7 @@ def show_menu():
         "║" + pad("  3. Auto-Execute") + "║",
         "║" + pad("  4. Discord Webhook") + "║",
         "║" + pad("  5. Config") + "║",
-        "║" + pad("  0. Exit (or 'stop'0") + "║",
+        "║" + pad("  0. Exit (or 'stop')") + "║",
         "║" + " "*width + "║",            # blank line
         "║" + pad("  Note: Hello! ") + "║",
         "╚" + "═"*width + "╝"
