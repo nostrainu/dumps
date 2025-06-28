@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "2.0"   
+__version__ = "2.1"   
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -108,8 +108,12 @@ def show_menu():
     gray = "\033[90m"
     reset = "\033[0m"
 
+    def strip_ansi(s):
+        return re.sub(r'\033\[[0-9;]*m', '', s)
+
     def pad(text):
-        return text + " " * (width - len(text))
+        visible_len = len(strip_ansi(text))
+        return text + " " * (width - visible_len)
 
     def border(left, right, fill="═"):
         return left + fill * width + right
@@ -130,7 +134,7 @@ def show_menu():
         line("  [0] Exit (or 'stop')"),
         line(""),
         border("╠", "╣"),
-        line(gray + "  Tip: Type 'stop' anytime to cancel rejoining" + reset, ""),
+        "║" + pad(gray + "  Tip: Type 'stop' anytime to cancel rejoining" + reset) + "║",
         border("╚", "╝")
     ]))
 
