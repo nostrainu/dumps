@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "0.1"   
+__version__ = "0.2"   
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -217,7 +217,7 @@ def main():
             send("VM Rejoin Tool **stopped** :stop_sign:")
             print("\nStopped.\n")
 
-        # 3 ── Auto‑Execute (Delta)
+        # 3 ── Auto‑Execute 
         elif choice == "3":
             if not (delta := find_delta_autoexec()):
                 print("Delta Autoexecute folder not found."); continue
@@ -246,13 +246,13 @@ def main():
             elif sub == "2":
                 webhook = ""; print("Webhook cleared.\n")
 
-        # 5 ── Config (save / clear)
+        # 5 ── Config 
         elif choice == "5":
-            print("[S] Save  [C] Clear  [0] Back")
+            print("[1] Save  [2] Clear  [0] Back")
             sub = input("> ").strip().lower()
-            if sub == "s":
+            if sub == "1":
                 save_config()
-            elif sub == "c" and input("Sure? Y/N ").lower() == "y":
+            elif sub == "2" and input("Sure? Y/N ").lower() == "y":
                 clear_config()
 
         # 0 ── Exit
