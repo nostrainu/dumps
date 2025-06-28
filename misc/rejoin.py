@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "1.9"   
+__version__ = "2.0"   
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -102,45 +102,36 @@ def clear_config():
     print("[Config cleared]")
 
 # -------------------------- MENU UI --------------------------- #
-def strip_ansi(text: str) -> str:
-    """Remove ANSI color codes so len() counts visible chars only."""
-    return re.sub(r'\033\[[0-9;]*m', '', text)
-
 def show_menu():
     width = 57
-    cyan  = "\033[96m"
-    gray  = "\033[90m"
-    white = "\033[97m"
+    bold = "\033[1m"
+    gray = "\033[90m"
     reset = "\033[0m"
 
-    def pad(text: str) -> str:
-        """Pad inside text to full width (strip ANSI first)."""
-        visible = len(strip_ansi(text))
-        return text + " " * (width - visible)
+    def pad(text):
+        return text + " " * (width - len(text))
 
-    def border(left: str, right: str, fill: str, color: str) -> str:
-        return f"{color}{left}{fill * width}{right}{reset}"
+    def border(left, right, fill="═"):
+        return left + fill * width + right
 
-    def line(text: str, color: str) -> str:
-        return f"{color}║{reset}{pad(text)}{color}║{reset}"
+    def line(text, color=""):
+        return "║" + color + pad(text) + reset + "║"
 
     print("\n".join([
-        border("╔", "╗", "═", cyan),
-        line("ROLOBOX REJOIN MENU".center(width), cyan),
-        border("╠", "╣", "═", cyan),
-
-        line("  [1] Game to Join", white),
-        line("  [2] Start Auto-Join", white),
-        line("  [3] Auto-Execute",   white),
-        line("  [4] Discord Webhook", white),
-        line("  [5] Config", white),
-        line("  [6] Check for Updates", white),
-        line("  [0] Exit (or 'stop')",  white),
-        line("", white),  
-
-        border("╠", "╣", "═", gray),
-        line("  Tip: Type 'stop' anytime to cancel rejoining", gray),
-        border("╚", "╝", "═", gray),
+        border("╔", "╗"),
+        line(bold + "ROLOBOX REJOIN MENU".center(width) + reset),
+        border("╠", "╣"),
+        line("  [1] Game to Join"),
+        line("  [2] Start Auto-Join"),
+        line("  [3] Auto-Execute"),
+        line("  [4] Discord Webhook"),
+        line("  [5] Config"),
+        line("  [6] Check for Updates"),
+        line("  [0] Exit (or 'stop')"),
+        line(""),
+        border("╠", "╣"),
+        line(gray + "  Tip: Type 'stop' anytime to cancel rejoining" + reset, ""),
+        border("╚", "╝")
     ]))
 
 # ----------------------- ROBLOX HELPERS ----------------------- #
