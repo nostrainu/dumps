@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "1.7"   
+__version__ = "1.8"   
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -103,34 +103,36 @@ def clear_config():
 
 # -------------------------- MENU UI --------------------------- #
 def show_menu():
-    width = 55
-    pad = lambda t: t + " " * (width - len(strip_ansi(t)))
-    cyan = lambda t: f"\033[96m{t}\033[0m"
-    white = lambda t: f"\033[97m{t}\033[0m"
-    gray = lambda t: f"\033[90m{t}\033[0m"
+    width = 57
+    cyan = "\033[96m"
+    gray = "\033[90m"
+    reset = "\033[0m"
 
-    def strip_ansi(text):
-        return re.sub(r'\033\[[0-9;]*m', '', text)
+    def pad(text):
+        return text + " " * (width - len(text))
 
-    lines = [
-        "╔" + "═" * width + "╗",
-        "║" + "ROLOBOX REJOIN MENU".center(width) + "║",
-        "╠" + "═" * width + "╣",
-        f"║  {white('[1]')} Game to Join".ljust(width) + "║",
-        f"║  {white('[2]')} Start Auto-Join".ljust(width) + "║",
-        f"║  {white('[3]')} Auto-Execute".ljust(width) + "║",
-        f"║  {white('[4]')} Discord Webhook".ljust(width) + "║",
-        f"║  {white('[5]')} Config".ljust(width) + "║",
-        f"║  {white('[6]')} Check for Updates".ljust(width) + "║",
-        f"║  {white('[0]')} Exit".ljust(width) + "║",
-        "║" + " " * width + "║",
-        "╠" + "═" * width + "╣",
-        f"║  {gray('Tip: Use \'stop\' anytime to cancel rejoining')}".ljust(width) + "║",
-        "╚" + "═" * width + "╝"
-    ]
+    def border_line(char, fill, color):
+        return color + char + fill * width + char + reset
 
-    for line in lines:
-        print(cyan(line) if "╔" in line or "╚" in line or "╠" in line or "║" in line else line)
+    def content_line(text, color):
+        return color + "║" + reset + pad(text) + color + "║" + reset
+
+    print("\n".join([
+        border_line("╔", "═", cyan),
+        content_line("ROLOBOX REJOIN MENU".center(width), cyan),
+        border_line("╠", "═", cyan),
+        content_line("  [1] Game to Join", cyan),
+        content_line("  [2] Start Auto-Join", cyan),
+        content_line("  [3] Auto-Execute", cyan),
+        content_line("  [4] Discord Webhook", cyan),
+        content_line("  [5] Config", cyan),
+        content_line("  [6] Check for Updates", cyan),
+        content_line("  [0] Exit (or 'stop')", cyan),
+        content_line("", cyan),
+        border_line("╠", "═", gray),
+        content_line("  Tip: Type 'stop' anytime to cancel rejoining", gray),
+        border_line("╚", "═", gray),
+    ]))
 
 # ----------------------- ROBLOX HELPERS ----------------------- #
 pkgs   = lambda: [l.replace("package:", "") for l in sh("pm list packages")
