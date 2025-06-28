@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "0.9"   
+__version__ = "1.0"   
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -13,7 +13,7 @@ CHECK_INTERVAL  = 20                       # seconds between package scans
 FAST_POLL       = 1                        # seconds between stop‑flag polls
 # -------------------------------------------------------------- #
 
-import subprocess, time, requests, colorsys, threading, sys
+import subprocess, time, requests, colorsys, threading, sys, itertools
 import urllib.parse, os, tempfile, shlex, json, re, shutil, tempfile as _tmp
 
 # ------------------------ Self‑Updater ------------------------ #
@@ -50,7 +50,8 @@ send = lambda m: requests.post(webhook, json={"content": m}, timeout=10) \
                    if webhook else None
 
 # ----------------------------- Banner ------------------------- #
-def rgb(r,g,b,t): return f"\033[38;2;{r};{g};{b}m{t}\033[0m"
+import itertools
+
 def banner():
     art = [
         "███╗   ██╗██╗ ██████╗ ██████╗  █████╗ ███╗   ██╗████████╗",
@@ -60,10 +61,14 @@ def banner():
         "██║ ╚████║██║╚██████╔╝██║  ██║██║  ██║██║ ╚████║   ██║   ",
         "╚═╝  ╚═══╝╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ",
     ]
-    for ln in art:
-        print("".join(rgb(*(int(x*255) for x
-                           in colorsys.hsv_to_rgb(i/len(ln),1,1)), ch)
-                      for i, ch in enumerate(ln)))
+    wave = itertools.cycle(range(len(art[0])))
+
+    for frame in range(1):  
+        for row in art:
+            print("".join(
+                rgb(*(int(x*255) for x in colorsys.hsv_to_rgb((i + frame)/len(row),1,1)), ch)
+                for i, ch in enumerate(row)
+            ))
     pad = (len(art[0]) - len("Made by Your Mom")) // 2
     print(" " * pad + rgb(255,255,255,"Made by Your Mom") + "\n")
 
