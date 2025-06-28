@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "2.9"
+__version__ = "2.6"
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -140,10 +140,8 @@ def show_menu():
     ]))
 
 # ----------------------- ROBLOX HELPERS ----------------------- #
-sh = lambda c: subprocess.getoutput(c).strip()
-
-pkgs   = lambda: [l.replace("package:", "") for l in sh("pm list packages").splitlines()
-                  if "com.roblox." in l]
+pkgs   = lambda: [l.replace("package:", "") for l in sh("pm list packages")
+                  .splitlines() if "com.roblox." in l]
 running = lambda p: p in sh("dumpsys window | grep mCurrentFocus") \
                  or sh(f"pidof {p}") or p in sh("ps -A")
 fstop   = lambda p: sh(f"am force-stop {p}")
@@ -195,25 +193,20 @@ def main():
             while True:
                 pid = input(f"Place Id [{place_id or 'none'}]: ").strip() or place_id
                 if pid.isdigit() and input("Confirm (Y/N) ").lower() == "y":
-                    place_id = pid
-                    break
+                    place_id = pid; break
                 print("  digits only.")
             while True:
                 link = input("Private‑server link (Enter to skip): ").strip()
                 if not link:
-                    priv_code = None
-                    is_share = False
-                    break
+                    priv_code = None; is_share = False; break
                 p = urllib.parse.urlparse(link)
                 q = urllib.parse.parse_qs(p.query)
                 if "code" in q and "share" in p.path:
-                    priv_code = q["code"][0]
-                    is_share = True
+                    priv_code = q["code"][0]; is_share = True
                     if input("Confirm link? (Y/N) ").lower() == "y":
                         break
                 elif "privateServerLinkCode" in q:
-                    priv_code = q["privateServerLinkCode"][0]
-                    is_share = False
+                    priv_code = q["privateServerLinkCode"][0]; is_share = False
                     if input("Confirm link? (Y/N) ").lower() == "y":
                         break
                 else:
@@ -239,7 +232,6 @@ def main():
                 if sub == "1":
                     interval = CHECK_INTERVAL
                     print(f"Starting Auto‑Join every {interval}s…")
-
                 elif sub == "2":
                     try:
                         raw = input("Interval in seconds: ").strip()
@@ -250,7 +242,6 @@ def main():
                     except ValueError:
                         print("Invalid number.\n")
                         continue
-
                     if input(f"Start Auto‑Join every {interval}s? (Y/N): ").lower() != "y":
                         print("Cancelled. Returning…\n")
                         continue
@@ -259,8 +250,7 @@ def main():
                     continue
 
                 for pkg in pkgs():
-                    if running(pkg):
-                        sh(f"su -c 'am force-stop {pkg}'")
+                    sh(f"su -c 'am force-stop {pkg}'")
                 time.sleep(1)
 
                 stop = {"stop": False}
@@ -278,7 +268,7 @@ def main():
                                 if p not in launched:
                                     send(f"`{p}` closed — restarting :rocket:")
                                 sh(f"su -c 'am force-stop {p}'")
-                                time.sleep(2)
+                                time.sleep(1)
                                 open_game(deep_link(place_id, priv_code, is_share))
                                 launched.add(p)
                         last = time.time()
@@ -286,6 +276,7 @@ def main():
 
                 send("VM Rejoin Tool **stopped** :stop_sign:")
                 print("\nStopped. Returning to menu…\n")
+                break
 
         # 3 ── Auto‑Execute
         elif choice == "3":
