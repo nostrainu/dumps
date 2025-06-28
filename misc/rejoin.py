@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "3.4"
+__version__ = "3.5"
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -192,16 +192,19 @@ def roblox_users():
     uids = re.findall(r'UserInfo\{(\d+):', users_out)
     roblox_uids = []
     for uid in uids:
-        if "com.roblox.client" in sh(f"su -c 'pm list packages --user {uid} 2>/dev/null'"):
-            roblox_uids.append(int(uid))
+        pkgs = sh(f"su -c 'pm list packages --user {uid} 2>/dev/null'")
+        m = re.search(r'(com\.roblox\.clien[a-z]*)', pkgs)
+        if m:
+            roblox_uids.append((int(uid), m.group(1)))  
     return roblox_uids
 
 def ensure_clients_running(place_id, priv_code=None, is_share=False):
     link = deep_link(place_id, priv_code, is_share)
     running_uids = {c["uid"] for c in running_clones()}
-    for uid in roblox_users():
+    for uid, pkg in roblox_users():
         if uid not in running_uids:
-            sh(f"su -c 'am start --user {uid} -n com.roblox.client/.startup.ActivitySplash -a android.intent.action.VIEW -d \"{link}\"'")
+            sh(f"su -c 'am start --user {uid} -n {pkg}/.startup.ActivitySplash "
+               f"-a android.intent.action.VIEW -d \"{link}\"'")
             time.sleep(1)
     return running_clones()
 
