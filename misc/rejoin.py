@@ -233,111 +233,108 @@ def main():
                     print("  invalid link")
             print("Game info saved in memory.\n")
 
-     # 2 ── Auto‑Join Menu
-elif choice == "2":
-    if not place_id:
-        print("Set Place Id first (option 1).\n")
-        continue
-
-    selected_clients = []  # indices of selected clients
-    custom_interval = None
-
-    while True:
-        print("\nAuto‑Join:")
-        print("[1] List Clients")
-        print("[2] Start")
-        print("[3] Interval")
-        print("[0] Back")
-        sub = input("Choose Number: ").strip()
-
-        # [0] Back
-        if sub == "0":
-            break
-
-        # [1] List Clients
-        elif sub == "1":
-            all_pkgs = pkgs()
-            print("\nClients:")
-            for i, p in enumerate(all_pkgs, 1):
-                print(f"[{i}] {p}")
-            print("[0] Start All")
-
-            raw = input("Choose Number(s): ").strip()
-            if raw == "0":
-                selected_clients = list(range(1, len(all_pkgs) + 1))
-            else:
-                try:
-                    selected = list(map(int, raw.split()))
-                    if not all(1 <= i <= len(all_pkgs) for i in selected):
-                        raise ValueError
-                    selected_clients = selected
-                    print(f"[Selected Clients: {', '.join(map(str, selected_clients))}]\n")
-                except:
-                    print("Invalid selection.\n")
-
-        # [2] Start
-        elif sub == "2":
-            interval = custom_interval or CHECK_INTERVAL
-            clones = running_clones()
-
-            if not clones:
-                print("\nNo running Roblox clones to start/monitor.\n")
+        # ── Auto Join
+        elif choice == "2":
+            if not place_id:
+                print("Set Place Id first (option 1).\n")
                 continue
 
-            if not selected_clients:
-                selected_clients = [c["idx"] for c in clones]
-                print("[No clients selected – defaulting to Start All]")
+            selected_clients = []
+            custom_interval = None
 
-            idx_map = {c["idx"]: c for c in clones}
-            chosen = [idx_map[i] for i in selected_clients if i in idx_map]
+            while True:
+                print("\nAuto‑Join:")
+                print("[1] List Clients")
+                print("[2] Start")
+                print("[3] Interval")
+                print("[0] Back")
+                sub = input("Choose Number: ").strip()
 
-            print(f"[Starting clients {', '.join(str(c['idx']) for c in chosen)} "
-                  f"with interval {interval}s…]")
+                if sub == "0":
+                    break
 
-            for c in chosen:
-                sh(f"su -c 'kill {c['pid']}' || true")
-                time.sleep(0.5)
-                sh(f"su -c 'am start --user {c['uid']} -a android.intent.action.VIEW "
-                   f"-d \"{deep_link(place_id, priv_code, is_share)}\"'")
+                elif sub == "1":
+                    clones = running_clones()
+                    if not clones:
+                        print("\nNo running Roblox clones detected. Open them first, then List again.\n")
+                        continue
 
-            stop = {"stop": False}
-            start_listener(stop)
-            send("VM Rejoin Tool **online** :satellite:")
-            last = 0
+                    print("\nClients:")
+                    for c in clones:
+                        print(f"[{c['idx']}] user {c['uid']:>2} | PID {c['pid']}")
+                    print("[0] Start All")
 
-            while not stop["stop"]:
-                if time.time() - last >= interval:
-                    clones_now = running_clones()
-                    live_pids = {c["pid"] for c in clones_now}
+                    raw = input("Choose Number(s): ").strip()
+                    if raw == "0":
+                        selected_clients = [c['idx'] for c in clones]
+                    else:
+                        try:
+                            picked = list(map(int, raw.split()))
+                            if not all(any(p == c['idx'] for c in clones) for p in picked):
+                                raise ValueError
+                            selected_clients = picked
+                            print(f"[Selected Clients: {', '.join(map(str, selected_clients))}]\n")
+                        except ValueError:
+                            print("Invalid selection.\n")
+
+                elif sub == "2":
+                    interval = custom_interval or CHECK_INTERVAL
+                    clones = running_clones()
+
+                    if not clones:
+                        print("\nNo running Roblox clones to start/monitor.\n")
+                        continue
+
+                    if not selected_clients:
+                        selected_clients = [c["idx"] for c in clones]
+                        print("[No clients selected – defaulting to Start All]")
+
+                    idx_map = {c["idx"]: c for c in clones}
+                    chosen = [idx_map[i] for i in selected_clients if i in idx_map]
+
+                    print(f"[Starting clients {', '.join(str(c['idx']) for c in chosen)} with interval {interval}s…]")
+
                     for c in chosen:
-                        if c["pid"] not in live_pids:
-                            send(f"Clone (user {c['uid']}) down — restarting :rocket:")
-                            sh(f"su -c 'am start --user {c['uid']} -a android.intent.action.VIEW "
-                               f"-d \"{deep_link(place_id, priv_code, is_share)}\"'")
-                    last = time.time()
-                time.sleep(FAST_POLL)
+                        sh(f"su -c 'kill {c['pid']}' || true")
+                        time.sleep(0.5)
+                        sh(f"su -c 'am start --user {c['uid']} -a android.intent.action.VIEW -d \"{deep_link(place_id, priv_code, is_share)}\"'")
 
-            send("VM Rejoin Tool **stopped** :stop_sign:")
-            print("\nStopped. Returning to menu…\n")
-            break
+                    stop = {"stop": False}
+                    start_listener(stop)
+                    send("VM Rejoin Tool **online** :satellite:")
+                    last = 0
 
-        # [3] Interval
-        elif sub == "3":
-            raw = input("Interval (seconds): ").strip()
-            try:
-                val = int(raw)
-                if val <= 0:
-                    raise ValueError
-                if input("Confirm Interval Y/N: ").lower() == "y":
-                    custom_interval = val
-                    print(f"[Interval set to {val} seconds.]\n")
+                    while not stop["stop"]:
+                        if time.time() - last >= interval:
+                            clones_now = running_clones()
+                            live_pids = {c["pid"] for c in clones_now}
+                            for c in chosen:
+                                if c["pid"] not in live_pids:
+                                    send(f"Clone (user {c['uid']}) down — restarting :rocket:")
+                                    sh(f"su -c 'am start --user {c['uid']} -a android.intent.action.VIEW -d \"{deep_link(place_id, priv_code, is_share)}\"'")
+                            last = time.time()
+                        time.sleep(FAST_POLL)
+
+                    send("VM Rejoin Tool **stopped** :stop_sign:")
+                    print("\nStopped. Returning to menu…\n")
+                    break
+
+                elif sub == "3":
+                    raw = input("Interval (seconds): ").strip()
+                    try:
+                        val = int(raw)
+                        if val <= 0:
+                            raise ValueError
+                        if input("Confirm Interval Y/N: ").lower() == "y":
+                            custom_interval = val
+                            print(f"[Interval set to {val} seconds.]\n")
+                        else:
+                            print("Cancelled.\n")
+                    except ValueError:
+                        print("Invalid number.\n")
+
                 else:
-                    print("Cancelled.\n")
-            except:
-                print("Invalid number.\n")
-
-        else:
-            print("Invalid choice.\n")
+                    print("Invalid choice.\n")
 
         # 3 ── Auto‑Execute
         elif choice == "3":
