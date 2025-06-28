@@ -64,8 +64,8 @@ def banner():
         print("".join(
             rgb(*(int(c*255) for c in colorsys.hsv_to_rgb(i/len(ln),1,1)), ch)
             for i, ch in enumerate(ln)))
-    pad = (len(art[0]) - len("Made by Grant")) // 2
-    print(" " * pad + rgb(255,255,255,"Made by Grant") + "\n")
+    pad = (len(art[0]) - len("Made by Your Mom")) // 2
+    print(" " * pad + rgb(255,255,255,"Made by Your Mom") + "\n")
 
 # ----------------------- CONFIG HELPERS ----------------------- #
 def load_config():
