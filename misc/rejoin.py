@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "0.4"   
+__version__ = "0.5"   
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -37,7 +37,6 @@ def check_self_update():
     except Exception as e:
         print(f"[Updater] skipped ({e})")
 check_self_update()
-# -------------------------------------------------------------- #
 
 # --------------------------- Globals -------------------------- #
 place_id   = ""       # Roblox place ID
@@ -116,8 +115,9 @@ def show_menu():
         "║" + pad("  3. Auto-Execute") + "║",
         "║" + pad("  4. Discord Webhook") + "║",
         "║" + pad("  5. Config") + "║",
+        "║" + pad("  6. Check for Updates") + "║",
         "║" + pad("  0. Exit (or 'stop')") + "║",
-        "║" + " "*width + "║",            # blank line
+        "║" + " "*width + "║",            
         "║" + pad("  Note: Hello! ") + "║",
         "╚" + "═"*width + "╝"
     ]))
@@ -254,6 +254,22 @@ def main():
                 save_config()
             elif sub == "2" and input("Sure? Y/N ").lower() == "y":
                 clear_config()
+        
+        # 6 ── Check for Updates
+        elif choice == "6":
+            try:
+                r = requests.get(RAW_URL, timeout=10)
+                r.raise_for_status()
+                cur = os.path.realpath(__file__)
+                with _tmp.NamedTemporaryFile("w", delete=False,
+                dir=os.path.dirname(cur)) as t:
+                    t.write(r.text)
+                    new_path = t.name
+                shutil.move(new_path, cur)
+                print("[Update] Complete! Restarting script…\n")
+                os.execv(sys.executable, [sys.executable] + sys.argv)
+            except Exception as e:
+                print(f"[Update error] {e}")
 
         # 0 ── Exit
         elif choice == "0":
