@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "3.2"
+__version__ = "3.3"
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -166,7 +166,7 @@ def find_delta_autoexec():
         if root.count(os.sep) > 6: dirs[:] = []
     return None
 
-# -------- CLONE DETECTOR (user‑level) -------- #
+# ------------------------ CLONE DETECTOR ------------------------- #
 def running_clones():
 
     out = sh("su -c 'ps -A | grep com.roblox.client 2>/dev/null'") or ""
@@ -185,6 +185,25 @@ def running_clones():
         clones.append({"idx": len(clones)+1, "uid": uid, "pid": pid})
         seen.add(pid)
     return clones
+
+# ------------------------ HELPER ------------------------- #
+def roblox_users():
+    users_out = sh("su -c 'pm list users'")
+    uids = re.findall(r'UserInfo\{(\d+):', users_out)
+    roblox_uids = []
+    for uid in uids:
+        if "com.roblox.client" in sh(f"su -c 'pm list packages --user {uid} 2>/dev/null'"):
+            roblox_uids.append(int(uid))
+    return roblox_uids
+
+def ensure_clients_running(place_id, priv_code=None, is_share=False):
+    link = deep_link(place_id, priv_code, is_share)
+    running_uids = {c["uid"] for c in running_clones()}
+    for uid in roblox_users():
+        if uid not in running_uids:
+            sh(f"su -c 'am start --user {uid} -n com.roblox.client/.startup.ActivitySplash -a android.intent.action.VIEW -d \"{link}\"'")
+            time.sleep(1)
+    return running_clones()
 
 # ----------------------- STOP LISTENER ------------------------ #
 def start_listener(flag):
@@ -292,7 +311,7 @@ def main():
 
                 elif sub == "2":
                     interval = custom_interval or CHECK_INTERVAL
-                    clones = running_clones()
+                    clones = ensure_clients_running(place_id, priv_code, is_share)
                     if not clones:
                         print("\nNo running Roblox clones to start/monitor.\n")
                         continue
