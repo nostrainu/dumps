@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "3.5"
+__version__ = "3.6"
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -201,11 +201,13 @@ def roblox_users():
 def ensure_clients_running(place_id, priv_code=None, is_share=False):
     link = deep_link(place_id, priv_code, is_share)
     running_uids = {c["uid"] for c in running_clones()}
+
     for uid, pkg in roblox_users():
         if uid not in running_uids:
-            sh(f"su -c 'am start --user {uid} -n {pkg}/.startup.ActivitySplash "
-               f"-a android.intent.action.VIEW -d \"{link}\"'")
+            sh(f"su -c 'am start --user {uid} -a android.intent.action.VIEW -d \"{link}\"'")
+            sh(f"su -c 'monkey --user {uid} -p {pkg} -c android.intent.category.LAUNCHER 1'")
             time.sleep(1)
+
     return running_clones()
 
 # ----------------------- STOP LISTENER ------------------------ #
