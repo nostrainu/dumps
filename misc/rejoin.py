@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "0.8"   
+__version__ = "0.9"   
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -359,42 +359,49 @@ def main():
                 r = requests.get(RAW_URL, timeout=10)
                 r.raise_for_status()
                 remote_code = r.text
-
-                m = re.search(r'__version__\s*=\s*[\'"]([^\'"]+)[\'"]', remote_code)
+                m = re.search(r'__version__\s*=\s*[\'"]([^\'"]+)[\'"]',
+                              remote_code)
                 remote_ver = m.group(1).strip() if m else None
                 if not remote_ver:
                     print("[Update] Remote file missing __version__; abort.\n")
                     continue
-
                 if remote_ver == __version__:
-                    print(f"[Update] You’re already on the latest version (v{__version__}).\n")
+                    print(f"[Update] You’re already on the latest "
+                          f"version (v{__version__}).\n")
                     continue
 
                 print(f"[Update] New version v{remote_ver} found. Downloading…")
-
-                response = requests.get(RAW_URL, stream=True, timeout=10)
-                total = int(response.headers.get('Content-Length', 0))
-                chunk_size = 4096
-                downloaded = 0
-                bar_len = 30
+                resp = requests.get(RAW_URL, stream=True, timeout=10)
+                resp.raise_for_status()
+                total = int(resp.headers.get("Content-Length", 0))
+                if total == 0:
+                    print("[Update] Unable to get file size, downloading anyway…")
 
                 cur_path = os.path.realpath(__file__)
                 dir_path = os.path.dirname(cur_path)
+                bar_len = 40
+                downloaded = 0
+                chunk_size = 8192
 
-                with _tmp.NamedTemporaryFile("w", delete=False, dir=dir_path) as tmp:
-                    for chunk in response.iter_content(chunk_size=chunk_size):
-                        text = chunk.decode()
-                        tmp.write(text)
+                with _tmp.NamedTemporaryFile("wb", delete=False,
+                                             dir=dir_path) as tmp:
+                    for chunk in resp.iter_content(chunk_size=chunk_size):
+                        if not chunk:
+                            continue
+                        tmp.write(chunk)
                         downloaded += len(chunk)
                         if total:
                             filled = int(bar_len * downloaded // total)
-                            bar = "█" * filled + "-" * (bar_len - filled)
                             pct = downloaded / total * 100
-                            sys.stdout.write(f"\r  [{bar}] {pct:5.1f}%")
+                            bar = "█" * filled + "-" * (bar_len - filled)
+                            sys.stdout.write(f"\r  [{bar}] {pct:6.2f}%")
                             sys.stdout.flush()
                     tmp_path = tmp.name
 
-                print("\n[Update] Download complete. Installing…")
+                if total:
+                    sys.stdout.write("\r  [████████████████████████████████████████] 100.00%\n")
+                print("[Update] Download complete. Installing…")
+
                 shutil.move(tmp_path, cur_path)
                 print(f"[Update] Installed v{remote_ver}. Restarting script…\n")
                 time.sleep(1)
