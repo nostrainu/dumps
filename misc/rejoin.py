@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "1.8"   
+__version__ = "1.9"   
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -66,7 +66,7 @@ def banner():
     pad = (len(art[0]) - len("Made by Grant")) // 2
     print(" " * pad + rgb(255,255,255,"Made by Grant") + "\n")
 
-# ----------------------- cONFIG HELPERS ----------------------- #
+# ----------------------- CONFIG HELPERS ----------------------- #
 def load_config():
     global place_id, priv_code, is_share, webhook
     try:
@@ -102,36 +102,45 @@ def clear_config():
     print("[Config cleared]")
 
 # -------------------------- MENU UI --------------------------- #
+def strip_ansi(text: str) -> str:
+    """Remove ANSI color codes so len() counts visible chars only."""
+    return re.sub(r'\033\[[0-9;]*m', '', text)
+
 def show_menu():
     width = 57
-    cyan = "\033[96m"
-    gray = "\033[90m"
+    cyan  = "\033[96m"
+    gray  = "\033[90m"
+    white = "\033[97m"
     reset = "\033[0m"
 
-    def pad(text):
-        return text + " " * (width - len(text))
+    def pad(text: str) -> str:
+        """Pad inside text to full width (strip ANSI first)."""
+        visible = len(strip_ansi(text))
+        return text + " " * (width - visible)
 
-    def border_line(char, fill, color):
-        return color + char + fill * width + char + reset
+    def border(left: str, right: str, fill: str, color: str) -> str:
+        return f"{color}{left}{fill * width}{right}{reset}"
 
-    def content_line(text, color):
-        return color + "║" + reset + pad(text) + color + "║" + reset
+    def line(text: str, color: str) -> str:
+        return f"{color}║{reset}{pad(text)}{color}║{reset}"
 
     print("\n".join([
-        border_line("╔", "═", cyan),
-        content_line("ROLOBOX REJOIN MENU".center(width), cyan),
-        border_line("╠", "═", cyan),
-        content_line("  [1] Game to Join", cyan),
-        content_line("  [2] Start Auto-Join", cyan),
-        content_line("  [3] Auto-Execute", cyan),
-        content_line("  [4] Discord Webhook", cyan),
-        content_line("  [5] Config", cyan),
-        content_line("  [6] Check for Updates", cyan),
-        content_line("  [0] Exit (or 'stop')", cyan),
-        content_line("", cyan),
-        border_line("╠", "═", gray),
-        content_line("  Tip: Type 'stop' anytime to cancel rejoining", gray),
-        border_line("╚", "═", gray),
+        border("╔", "╗", "═", cyan),
+        line("ROLOBOX REJOIN MENU".center(width), cyan),
+        border("╠", "╣", "═", cyan),
+
+        line("  [1] Game to Join", white),
+        line("  [2] Start Auto-Join", white),
+        line("  [3] Auto-Execute",   white),
+        line("  [4] Discord Webhook", white),
+        line("  [5] Config", white),
+        line("  [6] Check for Updates", white),
+        line("  [0] Exit (or 'stop')",  white),
+        line("", white),  
+
+        border("╠", "╣", "═", gray),
+        line("  Tip: Type 'stop' anytime to cancel rejoining", gray),
+        border("╚", "╝", "═", gray),
     ]))
 
 # ----------------------- ROBLOX HELPERS ----------------------- #
