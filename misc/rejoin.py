@@ -140,8 +140,10 @@ def show_menu():
     ]))
 
 # ----------------------- ROBLOX HELPERS ----------------------- #
-pkgs   = lambda: [l.replace("package:", "") for l in sh("pm list packages")
-                  .splitlines() if "com.roblox." in l]
+sh = lambda c: subprocess.getoutput(c).strip()
+
+pkgs   = lambda: [l.replace("package:", "") for l in sh("pm list packages").splitlines()
+                  if "com.roblox." in l]
 running = lambda p: p in sh("dumpsys window | grep mCurrentFocus") \
                  or sh(f"pidof {p}") or p in sh("ps -A")
 fstop   = lambda p: sh(f"am force-stop {p}")
