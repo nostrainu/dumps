@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "2.7"
+__version__ = "2.8"
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -166,6 +166,26 @@ def find_delta_autoexec():
         if root.count(os.sep) > 6: dirs[:] = []
     return None
 
+# -------- CLONE DETECTOR (user‑level) -------- #
+def running_clones():
+
+    out = sh("su -c 'ps -A | grep com.roblox.client 2>/dev/null'") or ""
+    clones = []
+    seen = set()
+    for line in out.splitlines():
+        parts = line.split()
+        if len(parts) < 2:    # bad line
+            continue
+        pid  = parts[1]
+        user = parts[0]       # e.g. u10_a59
+        if pid in seen:
+            continue
+        m = re.match(r"u(\d+)_", user)
+        uid = int(m.group(1)) if m else 0
+        clones.append({"idx": len(clones)+1, "uid": uid, "pid": pid})
+        seen.add(pid)
+    return clones
+
 # ----------------------- STOP LISTENER ------------------------ #
 def start_listener(flag):
     def _listen():
@@ -255,45 +275,51 @@ def main():
                         except:
                             print("Invalid selection.\n")
 
-                # [2] Start
-                elif sub == "2":
-                    interval = custom_interval if custom_interval else CHECK_INTERVAL
-                    pkgs_all = pkgs()
-                    if not selected_clients:
-                        selected_clients = list(range(1, len(pkgs_all)+1))
-                        print("[No clients selected – defaulting to Start All]")
+            # [2] Start
+            elif sub == "2":
+                interval = custom_interval or CHECK_INTERVAL
+                clones   = running_clones()
 
-                    print(f"[Starting clients {', '.join(map(str, selected_clients))} with interval {interval}s…]")
-                    for i in selected_clients:
-                        pkg = pkgs_all[i - 1]
-                        fstop(pkg)
-                        time.sleep(1)
-                        open_game(deep_link(place_id, priv_code, is_share))
+                if not clones:
+                    print("\nNo running Roblox clones to start/monitor.\n")
+                    continue
 
-                    stop = {"stop": False}
-                    start_listener(stop)
-                    send("VM Rejoin Tool **online** :satellite:")
-                    launched, last = set(), 0
+                if not selected_clients:
+                    selected_clients = [c["idx"] for c in clones]
+                    print("[No clients selected – defaulting to Start All]")
 
-                    while not stop["stop"]:
-                        if time.time() - last >= interval:
-                            for i in selected_clients:
-                                pkg = pkgs_all[i - 1]
-                                if running(pkg):
-                                    launched.add(pkg)
-                                else:
-                                    if pkg not in launched:
-                                        send(f"`{pkg}` closed — restarting :rocket:")
-                                    fstop(pkg)
-                                    time.sleep(1)
-                                    open_game(deep_link(place_id, priv_code, is_share))
-                                    launched.add(pkg)
-                            last = time.time()
-                        time.sleep(FAST_POLL)
+                idx_map = {c["idx"]: c for c in clones}
+                chosen  = [idx_map[i] for i in selected_clients]
 
-                    send("VM Rejoin Tool **stopped** :stop_sign:")
-                    print("\nStopped. Returning to menu…\n")
-                    break
+                print(f"[Starting clients {', '.join(str(c['idx']) for c in chosen)} "
+                    f"with interval {interval}s…]")
+
+                for c in chosen:
+                    sh(f"su -c 'kill {c['pid']}' || true")         
+                    time.sleep(0.5)
+                    sh(f"su -c 'am start --user {c['uid']} -a android.intent.action.VIEW "
+                    f"-d \"{deep_link(place_id, priv_code, is_share)}\"'")
+
+                stop = {"stop": False}
+                start_listener(stop)
+                send("VM Rejoin Tool **online** :satellite:")
+                last = 0
+
+                while not stop["stop"]:
+                    if time.time() - last >= interval:
+                        clones_now = running_clones()
+                        live_pids  = {c["pid"] for c in clones_now}
+                        for c in chosen:
+                            if c["pid"] not in live_pids:
+                                send(f"Clone (user {c['uid']}) down — restarting :rocket:")
+                                sh(f"su -c 'am start --user {c['uid']} -a android.intent.action.VIEW "
+                                f"-d \"{deep_link(place_id, priv_code, is_share)}\"'")
+                        last = time.time()
+                    time.sleep(FAST_POLL)
+
+                send("VM Rejoin Tool **stopped** :stop_sign:")
+                print("\nStopped. Returning to menu…\n")
+                break
 
                 # [3] Interval
                 elif sub == "3":
