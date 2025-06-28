@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "2.4"
+__version__ = "2.5"
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -221,8 +221,7 @@ def main():
 
             while True:
                 print("\nAuto‑Join:")
-                print("[1] Start  (default interval = "
-                      f"{CHECK_INTERVAL}s)")
+                print(f"[1] Start  (default interval = {CHECK_INTERVAL}s)")
                 print("[2] Interval (set custom)")
                 print("[0] Back")
                 sub = input("> ").strip()
@@ -233,15 +232,17 @@ def main():
                 if sub == "1":
                     interval = CHECK_INTERVAL
                     print(f"Starting Auto‑Join every {interval}s…")
-
+                           
                 elif sub == "2":
                     try:
                         raw = input("Interval in seconds: ").strip()
                         interval = int(raw)
                         if interval <= 0:
-                            print("Interval must be > 0.\n"); continue
+                            print("Interval must be > 0.\n")
+                            continue
                     except ValueError:
-                        print("Invalid number.\n"); continue
+                        print("Invalid number.\n")
+                        continue
 
                     if input(f"Start Auto‑Join every {interval}s? (Y/N): "
                              ).lower() != "y":
@@ -249,7 +250,11 @@ def main():
                         continue
                 else:
                     print("Invalid choice.\n")
-                    continue  
+                    continue
+
+                for pkg in pkgs():          
+                    fstop(pkg)
+                time.sleep(2)               
 
                 stop = {"stop": False}
                 start_listener(stop)
@@ -274,7 +279,7 @@ def main():
 
                 send("VM Rejoin Tool **stopped** :stop_sign:")
                 print("\nStopped. Returning to menu…\n")
-                break  
+                break   
 
         # 3 ── Auto‑Execute
         elif choice == "3":
