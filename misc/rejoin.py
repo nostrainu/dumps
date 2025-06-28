@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "1.2"   
+__version__ = "1.3"   
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -54,9 +54,9 @@ def rgb(r, g, b, text):
     return f"\033[38;2;{r};{g};{b}m{text}\033[0m"
 
 def clear():
-    os.system('clear' if os.name != 'nt' else 'cls')
+    os.system("clear" if os.name != "nt" else "cls")
 
-def animated_banner(frames=30, delay=0.05):
+def banner(frames=30, delay=0.05):
     art = [
         "███╗   ██╗██╗ ██████╗ ██████╗  █████╗ ███╗   ██╗████████╗",
         "████╗  ██║██║██╔════╝ ██╔══██╗██╔══██╗████╗  ██║╚══██╔══╝",
@@ -70,7 +70,9 @@ def animated_banner(frames=30, delay=0.05):
         clear()
         for row in art:
             print("".join(
-                rgb(*(int(x * 255) for x in colorsys.hsv_to_rgb(((i + frame) % len(row)) / len(row), 1, 1)), ch)
+                rgb(*(int(c * 255) for c in 
+                     colorsys.hsv_to_rgb(((i + frame) % len(row)) / len(row), 1, 1)),
+                    ch)
                 for i, ch in enumerate(row)
             ))
         print(" " * 15 + rgb(255, 255, 255, "Made by Your Mom"))
