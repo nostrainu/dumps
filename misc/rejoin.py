@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "3.0"
+__version__ = "3.1"
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -204,7 +204,7 @@ def main():
     banner()
     load_config()
 
-    while True:
+        while True:
         show_menu()
         choice = input("Choose Number: ").strip()
 
@@ -213,28 +213,33 @@ def main():
             while True:
                 pid = input(f"Place Id [{place_id or 'none'}]: ").strip() or place_id
                 if pid.isdigit() and input("Confirm (Y/N) ").lower() == "y":
-                    place_id = pid; break
+                    place_id = pid
+                    break
                 print("  digits only.")
             while True:
                 link = input("Private‑server link (Enter to skip): ").strip()
                 if not link:
-                    priv_code = None; is_share = False; break
+                    priv_code = None
+                    is_share = False
+                    break
                 p = urllib.parse.urlparse(link)
                 q = urllib.parse.parse_qs(p.query)
                 if "code" in q and "share" in p.path:
-                    priv_code = q["code"][0]; is_share = True
+                    priv_code = q["code"][0]
+                    is_share = True
                     if input("Confirm link? (Y/N) ").lower() == "y":
                         break
                 elif "privateServerLinkCode" in q:
-                    priv_code = q["privateServerLinkCode"][0]; is_share = False
+                    priv_code = q["privateServerLinkCode"][0]
+                    is_share = False
                     if input("Confirm link? (Y/N) ").lower() == "y":
                         break
                 else:
                     print("  invalid link")
             print("Game info saved in memory.\n")
 
-          # ── Auto Join
-          elif choice == "2":
+        # 2 ── Auto‑Join
+        elif choice == "2":
             if not place_id:
                 print("Set Place Id first (option 1).\n")
                 continue
@@ -250,9 +255,11 @@ def main():
                 print("[0] Back")
                 sub = input("Choose Number: ").strip()
 
+                # ── Back
                 if sub == "0":
                     break
 
+                # ── List Clients
                 elif sub == "1":
                     clones = running_clones()
                     if not clones:
@@ -264,48 +271,42 @@ def main():
                     print("╠══════╦════════════════╦══════════════╣")
                     print("║ No.  ║ Name           ║ Status       ║")
                     print("╠══════╬════════════════╬══════════════╣")
-
-                    live_pids = {c["pid"] for c in clones}
-
+                    live_pids = {c['pid'] for c in clones}
                     for c in clones:
-                        idx = c["idx"]
-                        name = f"Client {idx}"
-                        status = "Running" if c["pid"] in live_pids else "Not running"
-                        print(f"║ {idx:<4} ║ {name:<14} ║ {status:<12} ║")
-
+                        idx = c['idx']
+                        status = "Running" if c['pid'] in live_pids else "Not running"
+                        print(f"║ {idx:<4} ║ Client {idx:<9} ║ {status:<12} ║")
                     print("╠══════╬════════════════╬══════════════╣")
                     print("║ 0    ║ Start All      ║ —            ║")
                     print("╚══════╩════════════════╩══════════════╝")
 
                     raw = input("Choose Number(s): ").strip()
                     if raw == "0":
-                        selected_clients = [c["idx"] for c in clones]
+                        selected_clients = [c['idx'] for c in clones]
                     else:
                         try:
                             picked = list(map(int, raw.split()))
-                            if not all(any(p == c["idx"] for c in clones) for p in picked):
+                            if not all(any(p == c['idx'] for c in clones) for p in picked):
                                 raise ValueError
                             selected_clients = picked
                             print(f"[Selected Clients: {', '.join(map(str, selected_clients))}]\n")
                         except ValueError:
                             print("Invalid selection.\n")
 
+                # ── Start
                 elif sub == "2":
                     interval = custom_interval or CHECK_INTERVAL
                     clones = running_clones()
-
                     if not clones:
                         print("\nNo running Roblox clones to start/monitor.\n")
                         continue
-
                     if not selected_clients:
-                        selected_clients = [c["idx"] for c in clones]
+                        selected_clients = [c['idx'] for c in clones]
                         print("[No clients selected – defaulting to Start All]")
 
-                    idx_map = {c["idx"]: c for c in clones}
+                    idx_map = {c['idx']: c for c in clones}
                     chosen = [idx_map[i] for i in selected_clients if i in idx_map]
-
-                    print(f"[Starting clients {', '.join(str(c['idx']) for c in chosen)} with interval {interval}s…]")
+                    print(f"[Starting clients {', '.join('Client '+str(c['idx']) for c in chosen)} with interval {interval}s…]")
 
                     for c in chosen:
                         sh(f"su -c 'kill {c['pid']}' || true")
@@ -319,10 +320,9 @@ def main():
 
                     while not stop["stop"]:
                         if time.time() - last >= interval:
-                            clones_now = running_clones()
-                            live_pids = {c["pid"] for c in clones_now}
+                            live_pids = {c['pid'] for c in running_clones()}
                             for c in chosen:
-                                if c["pid"] not in live_pids:
+                                if c['pid'] not in live_pids:
                                     send(f"Clone (user {c['uid']}) down — restarting :rocket:")
                                     sh(f"su -c 'am start --user {c['uid']} -a android.intent.action.VIEW -d \"{deep_link(place_id, priv_code, is_share)}\"'")
                             last = time.time()
@@ -332,6 +332,7 @@ def main():
                     print("\nStopped. Returning to menu…\n")
                     break
 
+                # ── Interval
                 elif sub == "3":
                     raw = input("Interval (seconds): ").strip()
                     try:
