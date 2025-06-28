@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "1.1"   
+__version__ = "1.2"   
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -53,8 +53,10 @@ send = lambda m: requests.post(webhook, json={"content": m}, timeout=10) \
 def rgb(r, g, b, text):
     return f"\033[38;2;{r};{g};{b}m{text}\033[0m"
 
-def banner():
-    import colorsys
+def clear():
+    os.system('clear' if os.name != 'nt' else 'cls')
+
+def animated_banner(frames=30, delay=0.05):
     art = [
         "███╗   ██╗██╗ ██████╗ ██████╗  █████╗ ███╗   ██╗████████╗",
         "████╗  ██║██║██╔════╝ ██╔══██╗██╔══██╗████╗  ██║╚══██╔══╝",
@@ -64,15 +66,15 @@ def banner():
         "╚═╝  ╚═══╝╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ",
     ]
 
-    for row in art:
-        print("".join(
-            rgb(*(int(c * 255) for c in colorsys.hsv_to_rgb(i / len(row), 1, 1)), ch)
-            for i, ch in enumerate(row)
-        ))
-
-    center = "Made by Your Mom"
-    width = len(art[0])
-    print(" " * ((width - len(center)) // 2) + rgb(255, 255, 255, center) + "\n")
+    for frame in range(frames):
+        clear()
+        for row in art:
+            print("".join(
+                rgb(*(int(x * 255) for x in colorsys.hsv_to_rgb(((i + frame) % len(row)) / len(row), 1, 1)), ch)
+                for i, ch in enumerate(row)
+            ))
+        print(" " * 15 + rgb(255, 255, 255, "Made by Your Mom"))
+        time.sleep(delay)
 
 # -------------------------- Config helpers -------------------- #
 def load_config():
