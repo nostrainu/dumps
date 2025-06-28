@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "2.6"
+__version__ = "2.7"
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -219,64 +219,99 @@ def main():
                 print("Set Place Id first (option 1).\n")
                 continue
 
+            selected_clients = []  # indices of selected clients
+            custom_interval = None
+
             while True:
                 print("\nAuto‑Join:")
-                print(f"[1] Start  (default interval = {CHECK_INTERVAL}s)")
-                print("[2] Interval (set custom)")
+                print("[1] List Clients")
+                print("[2] Start")
+                print("[3] Interval")
                 print("[0] Back")
-                sub = input("> ").strip()
+                sub = input("Choose Number: ").strip()
 
+                # [0] Back
                 if sub == "0":
                     break
 
-                if sub == "1":
-                    interval = CHECK_INTERVAL
-                    print(f"Starting Auto‑Join every {interval}s…")
+                # [1] List Clients
+                elif sub == "1":
+                    all_pkgs = pkgs()
+                    print("\nClients:")
+                    for i, p in enumerate(all_pkgs, 1):
+                        print(f"[{i}] {p}")
+                    print("[0] Start All")
+
+                    raw = input("Choose Number(s): ").strip()
+                    if raw == "0":
+                        selected_clients = list(range(1, len(all_pkgs)+1))
+                    else:
+                        try:
+                            selected = list(map(int, raw.split()))
+                            if not all(1 <= i <= len(all_pkgs) for i in selected):
+                                raise ValueError
+                            selected_clients = selected
+                            print(f"[Selected Clients: {', '.join(map(str, selected_clients))}]\n")
+                        except:
+                            print("Invalid selection.\n")
+
+                # [2] Start
                 elif sub == "2":
+                    interval = custom_interval if custom_interval else CHECK_INTERVAL
+                    pkgs_all = pkgs()
+                    if not selected_clients:
+                        selected_clients = list(range(1, len(pkgs_all)+1))
+                        print("[No clients selected – defaulting to Start All]")
+
+                    print(f"[Starting clients {', '.join(map(str, selected_clients))} with interval {interval}s…]")
+                    for i in selected_clients:
+                        pkg = pkgs_all[i - 1]
+                        fstop(pkg)
+                        time.sleep(1)
+                        open_game(deep_link(place_id, priv_code, is_share))
+
+                    stop = {"stop": False}
+                    start_listener(stop)
+                    send("VM Rejoin Tool **online** :satellite:")
+                    launched, last = set(), 0
+
+                    while not stop["stop"]:
+                        if time.time() - last >= interval:
+                            for i in selected_clients:
+                                pkg = pkgs_all[i - 1]
+                                if running(pkg):
+                                    launched.add(pkg)
+                                else:
+                                    if pkg not in launched:
+                                        send(f"`{pkg}` closed — restarting :rocket:")
+                                    fstop(pkg)
+                                    time.sleep(1)
+                                    open_game(deep_link(place_id, priv_code, is_share))
+                                    launched.add(pkg)
+                            last = time.time()
+                        time.sleep(FAST_POLL)
+
+                    send("VM Rejoin Tool **stopped** :stop_sign:")
+                    print("\nStopped. Returning to menu…\n")
+                    break
+
+                # [3] Interval
+                elif sub == "3":
+                    raw = input("Interval (seconds): ").strip()
                     try:
-                        raw = input("Interval in seconds: ").strip()
-                        interval = int(raw)
-                        if interval <= 0:
-                            print("Interval must be > 0.\n")
-                            continue
-                    except ValueError:
+                        val = int(raw)
+                        if val <= 0:
+                            raise ValueError
+                        if input("Confirm Interval Y/N: ").lower() == "y":
+                            custom_interval = val
+                            print(f"[Interval set to {val} seconds.]\n")
+                        else:
+                            print("Cancelled.\n")
+                    except:
                         print("Invalid number.\n")
-                        continue
-                    if input(f"Start Auto‑Join every {interval}s? (Y/N): ").lower() != "y":
-                        print("Cancelled. Returning…\n")
-                        continue
+
                 else:
                     print("Invalid choice.\n")
-                    continue
-
-                for pkg in pkgs():
-                    sh(f"su -c 'am force-stop {pkg}'")
-                time.sleep(1)
-
-                stop = {"stop": False}
-                start_listener(stop)
-                send("VM Rejoin Tool **online** :satellite:")
-                launched, last = set(), 0
-                open_game(deep_link(place_id, priv_code, is_share))
-
-                while not stop["stop"]:
-                    if time.time() - last >= interval:
-                        for p in pkgs():
-                            if running(p):
-                                launched.add(p)
-                            else:
-                                if p not in launched:
-                                    send(f"`{p}` closed — restarting :rocket:")
-                                sh(f"su -c 'am force-stop {p}'")
-                                time.sleep(1)
-                                open_game(deep_link(place_id, priv_code, is_share))
-                                launched.add(p)
-                        last = time.time()
-                    time.sleep(FAST_POLL)
-
-                send("VM Rejoin Tool **stopped** :stop_sign:")
-                print("\nStopped. Returning to menu…\n")
-                break
 
         # 3 ── Auto‑Execute
         elif choice == "3":
