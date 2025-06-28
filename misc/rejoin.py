@@ -249,34 +249,31 @@ def main():
                     print("Invalid choice.\n")
                     continue
 
-                for pkg in pkgs():
-                    sh(f"su -c 'am force-stop {pkg}'")
-                time.sleep(1)
-
-                stop = {"stop": False}
-                start_listener(stop)
-                send("VM Rejoin Tool **online** :satellite:")
-                launched, last = set(), 0
-                open_game(deep_link(place_id, priv_code, is_share))
-
-                while not stop["stop"]:
-                    if time.time() - last >= interval:
-                        for p in pkgs():
-                            if running(p):
-                                launched.add(p)
-                            else:
-                                if p not in launched:
-                                    send(f"`{p}` closed — restarting :rocket:")
-                                sh(f"su -c 'am force-stop {p}'")
-                                time.sleep(1)
-                                open_game(deep_link(place_id, priv_code, is_share))
-                                launched.add(p)
-                        last = time.time()
-                    time.sleep(FAST_POLL)
-
-                send("VM Rejoin Tool **stopped** :stop_sign:")
-                print("\nStopped. Returning to menu…\n")
-                break
+           for pkg in pkgs():
+               if running(pkg):
+                   sh(f"su -c 'am force-stop {pkg}'")
+           time.sleep(1)  
+           
+           stop = {"stop": False}
+           start_listener(stop)
+           send("VM Rejoin Tool **online** :satellite:")
+           launched, last = set(), 0
+           open_game(deep_link(place_id, priv_code, is_share))
+           
+           while not stop["stop"]:
+               if time.time() - last >= interval:
+                   for p in pkgs():
+                       if running(p):
+                           launched.add(p)
+                       else:
+                           if p not in launched:
+                               send(f"`{p}` closed — restarting :rocket:")
+                           sh(f"su -c 'am force-stop {p}'")
+                           time.sleep(2)
+                           open_game(deep_link(place_id, priv_code, is_share))
+                           launched.add(p)
+                   last = time.time()
+               time.sleep(FAST_POLL)
 
         # 3 ── Auto‑Execute
         elif choice == "3":
