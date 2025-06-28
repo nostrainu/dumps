@@ -204,7 +204,7 @@ def main():
     banner()
     load_config()
 
-        while True:
+    while True:
         show_menu()
         choice = input("Choose Number: ").strip()
 
@@ -217,7 +217,7 @@ def main():
                     break
                 print("  digits only.")
             while True:
-                link = input("Private‑server link (Enter to skip): ").strip()
+                link = input("Private -server link (Enter to skip): ").strip()
                 if not link:
                     priv_code = None
                     is_share = False
@@ -238,7 +238,7 @@ def main():
                     print("  invalid link")
             print("Game info saved in memory.\n")
 
-        # 2 ── Auto‑Join
+        # 2 ── Auto -Join
         elif choice == "2":
             if not place_id:
                 print("Set Place Id first (option 1).\n")
@@ -248,25 +248,23 @@ def main():
             custom_interval = None
 
             while True:
-                print("\nAuto‑Join:")
+                print("\nAuto -Join:")
                 print("[1] List Clients")
                 print("[2] Start")
                 print("[3] Interval")
                 print("[0] Back")
                 sub = input("Choose Number: ").strip()
 
-                # ── Back
                 if sub == "0":
                     break
 
-                # ── List Clients
                 elif sub == "1":
                     clones = running_clones()
                     if not clones:
                         print("\nNo running Roblox clones detected. Open them first, then List again.\n")
                         continue
 
-                    print("\n╔═══════════════════════════════════════╗")
+                    print("\n╔═════════════════════════════════════════╗")
                     print("║              Clients                 ║")
                     print("╠══════╦════════════════╦══════════════╣")
                     print("║ No.  ║ Name           ║ Status       ║")
@@ -293,7 +291,6 @@ def main():
                         except ValueError:
                             print("Invalid selection.\n")
 
-                # ── Start
                 elif sub == "2":
                     interval = custom_interval or CHECK_INTERVAL
                     clones = running_clones()
@@ -332,7 +329,6 @@ def main():
                     print("\nStopped. Returning to menu…\n")
                     break
 
-                # ── Interval
                 elif sub == "3":
                     raw = input("Interval (seconds): ").strip()
                     try:
@@ -346,7 +342,6 @@ def main():
                             print("Cancelled.\n")
                     except ValueError:
                         print("Invalid number.\n")
-
                 else:
                     print("Invalid choice.\n")
 
