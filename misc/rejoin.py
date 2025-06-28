@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "1.4"   
+__version__ = "1.5"   
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -50,7 +50,8 @@ send = lambda m: requests.post(webhook, json={"content": m}, timeout=10) \
                    if webhook else None
 
 # --------------------------- Banner -------------------------- #
-def banner(delay=0.05):
+def rgb(r,g,b,t): return f"\033[38;2;{r};{g};{b}m{t}\033[0m"
+def banner():
     art = [
         "███╗   ██╗██╗ ██████╗ ██████╗  █████╗ ███╗   ██╗████████╗",
         "████╗  ██║██║██╔════╝ ██╔══██╗██╔══██╗████╗  ██║╚══██╔══╝",
@@ -60,12 +61,10 @@ def banner(delay=0.05):
         "╚═╝  ╚═══╝╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ",
     ]
     for ln in art:
-        print("".join(
-            rgb(*(int(c * 255) for c in colorsys.hsv_to_rgb(i / len(ln), 1, 1)), ch)
-            for i, ch in enumerate(ln)
-        ))
-        time.sleep(delay)
-    print(" " * 15 + rgb(255, 255, 255, "Made by Your Mom"))
+        print("".join(rgb(*(int(x*255) for x in colorsys.hsv_to_rgb(i/len(ln),1,1)), ch)
+                      for i, ch in enumerate(ln)))
+    pad = (len(art[0]) - len("Made by Grant")) // 2
+    print(" " * pad + rgb(255,255,255,"Made by Grant") + "\n")
 
 # -------------------------- Config helpers -------------------- #
 def load_config():
