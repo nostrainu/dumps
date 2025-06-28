@@ -2,7 +2,7 @@
 # grant rejoin tool – public beta
 # please donate ❤  (GCash / PayPal)
 
-__version__ = "0.7"   
+__version__ = "0.8"   
 
 RAW_URL = ("https://raw.githubusercontent.com/nostrainu/dumps/"
            "refs/heads/main/misc/rejoin.py")
@@ -257,7 +257,7 @@ def main():
 
             while True:
                 print("Loadstring:")
-                print("[1] Save   [2] Delete   [0] Back")
+                print("[1] Add   [2] Delete   [0] Back")
                 sub = input("> ").strip()
                 if sub == "0":
                     break
@@ -288,6 +288,7 @@ def main():
                         print(prc.stderr.strip())
                     else:
                         print(f"Saved to {root_name}/Autoexec: {fname}\n")
+                        break
 
                 elif sub == "2":
                     files = sorted([f for f in os.listdir(auto_path)
