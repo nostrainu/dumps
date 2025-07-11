@@ -5010,8 +5010,12 @@ function Library:CreateWindow(WindowInfo)
 				BackgroundTransparency = 1,
 				CanvasSize = UDim2.fromScale(0, 0),
 				ScrollBarThickness = 0,
+				Size = UDim2.fromScale(1, 1), 
+				Position = UDim2.fromScale(0, 0), 
+				Visible = true, 
 				Parent = TabContainer,
 			})
+
 			New("UIListLayout", {
 				Padding = UDim.new(0, 6),
 				Parent = TabFull,
@@ -5022,14 +5026,13 @@ function Library:CreateWindow(WindowInfo)
 					LayoutOrder = -1,
 					Parent = TabFull,
 				})
+
 				New("Frame", {
 					BackgroundTransparency = 1,
 					LayoutOrder = 1,
 					Parent = TabFull,
 				})
-				
-				TabFull.Size = UDim2.fromScale(1, 1)
-				Library:UpdateDPI(TabFull, { Size = TabFull.Size })
+
 			end
 
 			WarningBox = New("Frame", {
@@ -5169,22 +5172,34 @@ function Library:CreateWindow(WindowInfo)
 			end
 
 			local Offset = WarningBox.Visible and WarningBox.AbsoluteSize.Y + 6 or 0
-			for _, Side in pairs(Tab.Sides) do
-				Side.Position = UDim2.new(Side.Position.X.Scale, 0, 0, Offset)
-				Side.Size = UDim2.new(0, math.floor(TabContainer.AbsoluteSize.X / 2) - 3, 1, -Offset)
+
+			for side, Side in pairs(Tab.Sides) do
+				if side == 1 or side == 2 then
+					Side.Position = UDim2.new(side == 1 and 0 or 1, 0, 0, Offset)
+					Side.Size = UDim2.new(0, math.floor(TabContainer.AbsoluteSize.X / 2) - 3, 1, -Offset)
+				else
+					Side.Position = UDim2.fromOffset(0, Offset)
+					Side.Size = UDim2.new(1, 0, 1, -Offset)
+				end
+
 				Library:UpdateDPI(Side, {
 					Position = Side.Position,
 					Size = Side.Size,
 				})
 			end
 		end
-
+		
 		function Tab:AddGroupbox(Info)
+			local parent =
+				Info.Side == 1 and TabLeft
+				or Info.Side == 2 and TabRight
+				or Info.Side == 0 and TabFull
+
 			local BoxHolder = New("Frame", {
 				AutomaticSize = Enum.AutomaticSize.Y,
 				BackgroundTransparency = 1,
 				Size = UDim2.fromScale(1, 0),
-				Parent = (Info.Side == 1 and TabLeft) or (Info.Side == 2 and TabRight) or TabFull
+				Parent = parent,
 			})
 			New("UIListLayout", {
 				Padding = UDim.new(0, 6),
